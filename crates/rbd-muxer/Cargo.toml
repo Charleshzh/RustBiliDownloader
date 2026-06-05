@@ -1,0 +1,49 @@
+[package]
+name = "rbd-muxer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "RBD 混流: DASH copy (纯 Rust) + ffmpeg-sidecar 兜底 (杜比视界/HDR/转码)"
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+# 内部
+rbd-foundation = { path = "../rbd-foundation" }
+rbd-core = { path = "../rbd-core" }
+
+# 异步
+tokio = { workspace = true, features = ["fs", "process", "io-util", "sync"] }
+async-trait = { workspace = true }
+futures = { workspace = true }
+
+# 序列化
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# 错误
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# 日志
+tracing = { workspace = true }
+
+# 进程
+tokio-process = { workspace = true }
+which = "6.0"
+
+# 进度
+indicatif = { workspace = true }
+
+# 文件
+bytes = { workspace = true }
+tempfile = { workspace = true }
+
+# 工具
+once_cell = { workspace = true }
+regex = { workspace = true }
+
+[lints]
+workspace = true
