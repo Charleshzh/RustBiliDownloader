@@ -1,0 +1,58 @@
+[package]
+name = "rbd-downloader"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "RBD 下载器: 多线程 Range + 协程并发 video+audio + aria2c JSON-RPC"
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+# 内部
+rbd-foundation = { path = "../rbd-foundation" }
+rbd-core = { path = "../rbd-core" }
+
+# 异步
+tokio = { workspace = true, features = ["fs", "io-util", "process", "sync"] }
+async-trait = { workspace = true }
+futures = { workspace = true }
+futures-util = { workspace = true }
+tokio-util = { workspace = true, features = ["io"] }
+
+# HTTP
+reqwest = { workspace = true }
+hyper = { workspace = true }
+http = { workspace = true }
+
+# 序列化
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# 错误
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# 日志
+tracing = { workspace = true }
+
+# 进度
+indicatif = { workspace = true }
+
+# 并行
+rayon = { workspace = true }
+
+# 文件
+bytes = { workspace = true }
+tempfile = { workspace = true }
+
+# 限流 / 重试
+governor = { workspace = true }
+backoff = { workspace = true }
+
+# 工具
+chrono = { workspace = true }
+
+[lints]
+workspace = true
