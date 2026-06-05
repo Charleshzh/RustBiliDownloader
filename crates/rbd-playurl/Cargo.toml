@@ -1,0 +1,55 @@
+[package]
+name = "rbd-playurl"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "RBD playurl 抓取: 4-mode WEB (HTML5/Web/WebBangumi/TV) + APP gRPC (8K 备选) + fnval=FNVAL_DASH_ALL"
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+# 内部
+rbd-foundation = { path = "../rbd-foundation" }
+rbd-core = { path = "../rbd-core" }
+rbd-auth = { path = "../rbd-auth" }
+
+# 异步
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "time", "sync", "fs", "io-util"] }
+async-trait = { workspace = true }
+futures = { workspace = true }
+
+# HTTP
+reqwest = { workspace = true }
+url = { workspace = true }
+
+# 序列化
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# 错误
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# 日志
+tracing = { workspace = true }
+
+# gRPC + Protobuf (M4 启用)
+tonic = { workspace = true }
+prost = { workspace = true }
+prost-types = { workspace = true }
+
+# 编码
+flate2 = { workspace = true }
+hex = { workspace = true }
+
+# 限流 / 重试
+governor = { workspace = true }
+backoff = { workspace = true }
+
+[build-dependencies]
+tonic-build = { version = "0.12", features = ["prost"] }
+
+[lints]
+workspace = true
