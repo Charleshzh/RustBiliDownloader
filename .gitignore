@@ -8,6 +8,8 @@
 *.frag
 *.m4s
 *.flv
+/tmp/
+**/tmp/
 *.xml.partial
 *.crdownload
 
