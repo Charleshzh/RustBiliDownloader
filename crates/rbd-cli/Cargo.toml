@@ -1,0 +1,64 @@
+[package]
+name = "rbd-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "RBD 命令行入口: clap + dialoguer 交互式选 track"
+keywords.workspace = true
+categories.workspace = true
+
+[[bin]]
+name = "rbd"
+path = "src/main.rs"
+
+[dependencies]
+# 内部
+rbd-foundation = { path = "../rbd-foundation" }
+rbd-core = { path = "../rbd-core" }
+rbd-auth = { path = "../rbd-auth" }
+rbd-playurl = { path = "../rbd-playurl" }
+rbd-danmaku = { path = "../rbd-danmaku" }
+rbd-subtitle = { path = "../rbd-subtitle" }
+rbd-downloader = { path = "../rbd-downloader" }
+rbd-muxer = { path = "../rbd-muxer" }
+
+# 异步
+tokio = { workspace = true, features = ["full"] }
+async-trait = { workspace = true }
+futures = { workspace = true }
+
+# CLI
+clap = { workspace = true }
+dialoguer = { workspace = true }
+indicatif = { workspace = true }
+console = { workspace = true }
+
+# 序列化
+serde = { workspace = true }
+serde_json = { workspace = true }
+toml = { workspace = true }
+
+# 网络
+reqwest = { workspace = true }
+
+# 错误
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# 日志
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# 路径 / 文件
+dirs = { workspace = true }
+tempfile = { workspace = true }
+
+# 工具
+chrono = { workspace = true }
+regex = { workspace = true }
+once_cell = { workspace = true }
+
+[lints]
+workspace = true
