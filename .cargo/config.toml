@@ -1,0 +1,22 @@
+# 编译优化 (开发时打开增量, 加快调试)
+[build]
+incremental = true
+
+# 全局目标设置
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "link-arg=/SUBSYSTEM:CONSOLE"]
+
+[target.x86_64-unknown-linux-gnu]
+linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+
+[target.x86_64-unknown-linux-musl]
+linker = "musl-gcc"
+rustflags = ["-C", "target-feature=+crt-static"]
+
+[target.aarch64-apple-darwin]
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+
+# 加速编译的 codegen-backend
+[unstable]
+codegen-backend = true

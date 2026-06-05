@@ -1,0 +1,42 @@
+# --- Cargo ---
+/target
+**/*.rs.bk
+
+# --- 临时文件 (各模块 tmp 目录) ---
+*.tmp
+*.part
+*.frag
+*.m4s
+*.flv
+*.xml.partial
+*.crdownload
+
+# --- ffmpeg 临时输出 ---
+ffmpeg2pass-*.log
+ffmpeg-*.log
+
+# --- BBDown/Yutto 等竞品 (本项目无关) ---
+BBDown.config
+yutto.toml
+.bilibili-cookies
+
+# --- IDE ---
+.idea/
+.vscode/
+*.iml
+*.swp
+.DS_Store
+
+# --- 本地配置文件 (含敏感信息) ---
+.env
+.env.local
+rbd.local.toml
+rbd.config.local.toml
+
+# --- Python (仅做调研脚本时使用) ---
+__pycache__/
+*.pyc
+
+# --- 文档构建 ---
+docs/.vitepress/cache/
+docs/.vitepress/dist/
