@@ -1,0 +1,55 @@
+[package]
+name = "rbd-auth"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "RBD 鉴权: 多 profile SESSDATA + keyring + QR 登录 + buvid"
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+# 内部
+rbd-foundation = { path = "../rbd-foundation" }
+rbd-core = { path = "../rbd-core" }
+
+# 异步
+tokio = { workspace = true }
+async-trait = { workspace = true }
+futures = { workspace = true }
+
+# HTTP
+reqwest = { workspace = true }
+
+# 序列化
+serde = { workspace = true }
+serde_json = { workspace = true }
+toml = { workspace = true }
+toml_edit = { workspace = true }
+
+# 错误
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# 日志
+tracing = { workspace = true }
+
+# 系统
+keyring = { workspace = true }
+qrcode = { workspace = true }
+image = { workspace = true }
+console = { workspace = true }
+
+# 解析
+regex = { workspace = true }
+once_cell = { workspace = true }
+
+# 时间
+chrono = { workspace = true }
+
+# 路径
+dirs = { workspace = true }
+
+[lints]
+workspace = true
