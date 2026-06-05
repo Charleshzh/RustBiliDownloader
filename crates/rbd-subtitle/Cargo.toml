@@ -1,0 +1,45 @@
+[package]
+name = "rbd-subtitle"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "RBD 字幕: 5 套 API 回退链 + JSON/SRT/ASS 互转"
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+# 内部
+rbd-foundation = { path = "../rbd-foundation" }
+rbd-core = { path = "../rbd-core" }
+rbd-auth = { path = "../rbd-auth" }
+
+# 异步
+tokio = { workspace = true }
+async-trait = { workspace = true }
+futures = { workspace = true }
+
+# HTTP
+reqwest = { workspace = true }
+
+# 序列化
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# 错误
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# 日志
+tracing = { workspace = true }
+
+# 解析
+quick-xml = { workspace = true }
+regex = { workspace = true }
+
+# 限流
+governor = { workspace = true }
+
+[lints]
+workspace = true
