@@ -484,12 +484,19 @@ fn select_tracks_interactive<'a>(
         let items: Vec<String> = videos
             .iter()
             .map(|v| {
+                let size_mb = if v.size > 0 {
+                    format!("{:.1}MB", v.size as f64 / 1_048_576.0)
+                } else {
+                    "-".to_string()
+                };
                 format!(
-                    "{} ({}) {}fps {:>6}kbps",
+                    "{}  {}  {}  {}fps  {:>6}kbps  {}",
                     v.quality_desc,
+                    v.resolution,
                     v.codec,
                     v.frame_rate,
-                    v.bandwidth / 1000
+                    v.bandwidth / 1000,
+                    size_mb
                 )
             })
             .collect();
@@ -511,7 +518,7 @@ fn select_tracks_interactive<'a>(
             .iter()
             .map(|a| {
                 format!(
-                    "{} ({}) {:>6}kbps",
+                    "{}  {}  {:>6}kbps",
                     a.quality_desc,
                     a.codec,
                     a.bandwidth / 1000
