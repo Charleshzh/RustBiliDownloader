@@ -168,6 +168,9 @@ impl BilibiliApi {
                     ("order", "pubdate".to_string()),
                     ("tid", "0".to_string()),
                     ("keyword", String::new()),
+                    ("dm_img_list", "[]".to_string()),
+                    ("dm_img_str", rand_alphanumeric(32)),
+                    ("dm_cover_img_str", rand_alphanumeric(64)),
                 ],
             )
             .await?;
@@ -319,11 +322,6 @@ fn rand_alphanumeric(len: usize) -> String {
 
 fn build_wbi_signed_url(base: &str, params: Vec<(&str, String)>, wbi: &WbiKey) -> String {
     let mut query: Vec<(&str, String)> = params;
-
-    // Anti-bot dm_img_* 参数 (Yutto encode_wbi 行为, 全局 WBI 请求均注入)
-    query.push(("dm_img_list", "[]".to_string()));
-    query.push(("dm_img_str", rand_alphanumeric(32)));
-    query.push(("dm_cover_img_str", rand_alphanumeric(64)));
 
     query.push(("wts", chrono::Utc::now().timestamp().to_string()));
 
