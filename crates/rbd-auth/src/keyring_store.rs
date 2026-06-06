@@ -68,6 +68,17 @@ pub fn delete(name: &str) -> Result<()> {
 /// 由于 `keyring` crate v2 不支持枚举, 使用文件索引
 /// (`~/.config/rbd/profiles.json`) 记录已保存的 profile 名称.
 /// `save()` 自动将名称写入索引, `list()` 读取索引.
+///
+/// # 安全注意事项
+///
+/// **Windows 回退使用明文文件存储索引.**
+/// profile 索引文件 (`profiles.json`) 以明文 JSON 存储 profile 名称列表,
+/// 不包含敏感凭据 (凭据存储在系统 keychain 中), 但攻击者可读取文件获知
+/// 本地保存了哪些 profile. 生产环境建议依赖系统 keyring
+/// (Windows Credential Manager / macOS Keychain / Linux Secret Service).
+///
+/// 注意: keyring 本身在无桌面环境的 Linux 上不可用,
+/// 此时整个 profile 明文回退到 `~/.config/rbd/profiles.toml`.
 pub fn list() -> Result<Vec<String>> {
     let index_path = profile_index_path()?;
     if !index_path.exists() {

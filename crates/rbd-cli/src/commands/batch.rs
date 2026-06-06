@@ -23,6 +23,11 @@ pub async fn run(file: PathBuf) -> Result<()> {
     tracing::info!("批量下载 {} 个视频", urls.len());
 
     for (i, url) in urls.iter().enumerate() {
+        // 下载前验证 URL 安全性 (防 SSRF)
+        if !rbd_core::is_safe_download_url(url) {
+            tracing::warn!("跳过不安全 URL: {url} (第 {} 行)", i + 1);
+            continue;
+        }
         tracing::info!("[{}/{}] {}", i + 1, urls.len(), url);
         super::download::run(super::download::DownloadArgs {
             url: (*url).to_string(),

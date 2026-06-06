@@ -40,6 +40,8 @@ impl RangeClient {
 
     /// HEAD 获取总长度.
     pub async fn head(&self, url: &str, headers: &HeaderMap) -> Result<u64> {
+        // DNS rebinding 防护: 下载前验证解析后的 IP 是否安全
+        rbd_core::resolve_and_validate_ip(url)?;
         let response = self
             .client
             .head(url)
@@ -63,6 +65,8 @@ impl RangeClient {
         end: u64,
         headers: &HeaderMap,
     ) -> Result<RangeResponse> {
+        // DNS rebinding 防护: 下载前验证解析后的 IP 是否安全
+        rbd_core::resolve_and_validate_ip(url)?;
         let mut req_headers = headers.clone();
         req_headers.insert(RANGE, format!("bytes={start}-{end}").parse()?);
         let response = self
