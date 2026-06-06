@@ -6,6 +6,7 @@ use anyhow::{Context, Result};
 use reqwest::header::{HeaderMap, HeaderValue, REFERER, USER_AGENT};
 use std::path::{Path, PathBuf};
 
+use rbd_auth::keyring_store;
 use rbd_core::api::BilibiliApi;
 use rbd_core::extractor::ExtractorRegistry;
 use rbd_core::id::parse_url;
@@ -17,6 +18,20 @@ use rbd_playurl::client::PlayUrlClient;
 use rbd_playurl::fallback::FallbackChain;
 
 use crate::progress::CliProgress;
+
+/// 创建 API 客户端, 自动加载登录态.
+fn load_api_with_auth() -> Result<BilibiliApi> {
+    let profile = keyring_store::load("default").or_else(|_| keyring_store::load("ci-test"));
+    match profile {
+        Ok(p) if p.is_logged_in() => {
+            let api = BilibiliApi::new()?;
+            let cookie_str = p.cookie_header();
+            api.with_full_cookie(&cookie_str)
+                .context("无法设置 auth cookie")
+        }
+        _ => BilibiliApi::new(),
+    }
+}
 
 /// 下载命令参数.
 #[derive(Debug, Clone)]
@@ -55,8 +70,8 @@ pub async fn run(args: DownloadArgs) -> Result<()> {
     let normalized = parse_url(&args.url).with_context(|| format!("URL 解析失败: {}", args.url))?;
     tracing::info!("已解析: {:?}", normalized);
 
-    // 2. 构建 API 客户端
-    let api = BilibiliApi::new()?;
+    // 2. 构建 API 客户端 (加载登录态)
+    let api = load_api_with_auth()?;
 
     // 3. 提取视频信息
     let registry = ExtractorRegistry::with_defaults();

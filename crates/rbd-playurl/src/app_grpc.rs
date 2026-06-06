@@ -55,6 +55,6 @@ pub async fn fetch_app_grpc(
     // WEB API fnval=4048 已覆盖 8K/Dolby/HDR
     // 参见模块级文档了解完整决策背景
     let value = client.api().get_playurl(bvid, cid, qn).await?;
-    let (videos, audios, _) = client.parse_tracks(&value)?;
+    let (videos, audios) = client.parse_tracks(&value)?;
     Ok((videos, audios))
 }

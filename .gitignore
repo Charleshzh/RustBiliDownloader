@@ -42,3 +42,6 @@ __pycache__/
 # --- 文档构建 ---
 docs/.vitepress/cache/
 docs/.vitepress/dist/
+/test_dl/
+*.mp4
+*.jpg

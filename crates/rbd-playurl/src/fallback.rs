@@ -108,38 +108,42 @@ impl FallbackChain {
     ) -> Result<FetchResult> {
         let mut last_error = None;
 
-        for &qn in &self.quality_priority {
-            // 如果设置了最低画质, 跳过低于该值的 qn
-            if let Some(min) = self.min_quality {
-                if qn < min {
-                    continue;
-                }
+        // 外层 mode(保证 Web/Tv 优先于 Html5), 内层 qn(同一模式内画质从高到低)
+        for &mode in &self.modes {
+            if is_bangumi && mode == Mode::Html5 {
+                continue;
             }
-            for &mode in &self.modes {
-                if is_bangumi && mode == Mode::Html5 {
-                    continue;
-                }
-                if !is_bangumi && mode.is_for_bangumi() {
-                    continue;
+            if !is_bangumi && mode.is_for_bangumi() {
+                continue;
+            }
+
+            for &qn in &self.quality_priority {
+                if let Some(min) = self.min_quality {
+                    if qn < min {
+                        continue;
+                    }
                 }
 
                 match fetch_mode(mode, client, bvid, cid, qn).await {
-                    Ok((videos, audios)) if !videos.is_empty() || !audios.is_empty() => {
-                        let subtitles = client.fetch_subtitles(bvid, cid).await.unwrap_or_default();
-                        let quality_desc = videos
-                            .first()
-                            .map(|item| item.quality_desc.clone())
-                            .or_else(|| audios.first().map(|item| item.quality_desc.clone()))
-                            .unwrap_or_else(|| format!("Q{qn}"));
-                        return Ok(FetchResult {
-                            mode,
-                            videos,
-                            audios,
-                            subtitles,
-                            quality_desc,
-                        });
+                    Ok((videos, audios)) => {
+                        if !videos.is_empty() || !audios.is_empty() {
+                            let subtitles =
+                                client.fetch_subtitles(bvid, cid).await.unwrap_or_default();
+                            let quality_desc = videos
+                                .first()
+                                .map(|item| item.quality_desc.clone())
+                                .or_else(|| audios.first().map(|item| item.quality_desc.clone()))
+                                .unwrap_or_else(|| format!("Q{qn}"));
+                            return Ok(FetchResult {
+                                mode,
+                                videos,
+                                audios,
+                                subtitles,
+                                quality_desc,
+                            });
+                        }
+                        last_error = Some(anyhow!("模式 {} Q{qn} 返回空轨道", mode.name()));
                     }
-                    Ok(_) => last_error = Some(anyhow!("模式 {} 返回空轨道", mode.name())),
                     Err(err) => last_error = Some(err),
                 }
             }

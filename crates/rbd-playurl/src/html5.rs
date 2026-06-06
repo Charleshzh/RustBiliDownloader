@@ -16,20 +16,27 @@ pub async fn fetch_html5(
         "https://api.bilibili.com/x/player/playurl?bvid={bvid}&cid={cid}&qn={qn}&fnval=1&platform=html5&high_quality=1"
     );
     let value = client.api().get_json::<serde_json::Value>(&url).await?;
-    let (videos, audios, parsed) = client.parse_tracks(&value)?;
+    let (videos, audios) = client.parse_tracks(&value)?;
 
     if !videos.is_empty() || !audios.is_empty() {
         return Ok((videos, audios));
     }
 
-    let quality_desc = parsed
-        .data
-        .quality_desc
-        .clone()
-        .unwrap_or_else(|| format!("Q{qn}"));
-    let durl = parsed.data.durl.unwrap_or_default();
-    let urls = durl.iter().map(|item| item.url.clone()).collect::<Vec<_>>();
-    let total_size = durl.iter().map(|item| item.size).sum();
+    // DASH 未命中, fallback 到 durl 合并流
+    let quality_desc = value["data"]["quality_desc"]
+        .as_str()
+        .map_or_else(|| format!("Q{qn}"), String::from);
+    let durl_arr = value["data"]["durl"].as_array();
+    let urls: Vec<String> = durl_arr
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|item| item["url"].as_str().map(String::from))
+                .collect()
+        })
+        .unwrap_or_default();
+    let total_size: u64 = durl_arr.map_or(0, |arr| {
+        arr.iter().filter_map(|item| item["size"].as_u64()).sum()
+    });
 
     if urls.is_empty() {
         return Ok((Vec::new(), Vec::new()));

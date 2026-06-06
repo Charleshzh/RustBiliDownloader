@@ -17,6 +17,6 @@ pub async fn fetch_web(
         "https://api.bilibili.com/x/player/playurl?bvid={bvid}&cid={cid}&qn={qn}&fnval={FNVAL_DASH_ALL}&fnver=0&fourk=1"
     );
     let value = client.api().get_json::<serde_json::Value>(&url).await?;
-    let (videos, audios, _) = client.parse_tracks(&value)?;
+    let (videos, audios) = client.parse_tracks(&value)?;
     Ok((videos, audios))
 }
