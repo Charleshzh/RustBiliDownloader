@@ -131,6 +131,15 @@ GitHub Actions: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 - **clippy**: `cargo clippy --workspace -- -D warnings`
 - **fmt**: `cargo fmt --all -- --check`
 
+## 已知限制
+
+| 限制 | 说明 |
+|------|------|
+| UP 主空间 (-403) | B站 风控要求更强的认证, 参考 BBDown 同样不支持 (抛异常 "暂不支持该功能") |
+| APP gRPC | 刻意不实现 — fnval=4048 WEB API 已覆盖 8K/HDR/Dolby/AV1 全部格式 |
+| 合集 / 媒体列表 | URL 解析已完成, 未用真实链接做端到端验证 |
+| 纯 Rust m4s→mp4 | 当前委托 ffmpeg, v1.1 计划 |
+
 ## 路线图
 
 - **v1.0** — 完整功能对标 BBDown / Yutto ✅
