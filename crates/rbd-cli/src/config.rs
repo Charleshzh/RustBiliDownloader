@@ -3,13 +3,14 @@
 //! 从 `~/.config/rbd/rbd.toml` 加载 CLI 配置,
 //! 使用 `rbd_foundation::config` 提供的通用 TOML 加载器.
 
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
-use anyhow::Result;
 
 /// CLI 配置.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct CliConfig {
     /// 默认画质
     pub quality: Option<u32>,

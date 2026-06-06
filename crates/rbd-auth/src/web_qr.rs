@@ -57,14 +57,8 @@ pub async fn generate() -> Result<QrGenerateResponse> {
         .await?;
 
     let data = &value["data"];
-    let url = data["url"]
-        .as_str()
-        .unwrap_or_default()
-        .to_string();
-    let qrcode_key = data["qrcode_key"]
-        .as_str()
-        .unwrap_or_default()
-        .to_string();
+    let url = data["url"].as_str().unwrap_or_default().to_string();
+    let qrcode_key = data["qrcode_key"].as_str().unwrap_or_default().to_string();
 
     if qrcode_key.is_empty() {
         return Err(anyhow!(
@@ -126,7 +120,8 @@ pub async fn poll(qrcode_key: &str) -> Result<HashMap<String, String>> {
                 let redirect_url = data["url"]
                     .as_str()
                     .ok_or_else(|| anyhow!("登录确认成功但缺少重定向 URL"))?;
-                let cookies = collect_login_cookies(&login_client, redirect_url.to_string()).await?;
+                let cookies =
+                    collect_login_cookies(&login_client, redirect_url.to_string()).await?;
                 tracing::info!("WEB 登录成功, 获取到 {} 个 cookie", cookies.len());
                 return Ok(cookies);
             }
@@ -151,10 +146,7 @@ pub async fn poll(qrcode_key: &str) -> Result<HashMap<String, String>> {
 }
 
 /// 单次轮询 (内部).
-async fn poll_once(
-    client: &reqwest::Client,
-    url: &str,
-) -> Result<serde_json::Value> {
+async fn poll_once(client: &reqwest::Client, url: &str) -> Result<serde_json::Value> {
     let resp = client
         .get(url)
         .header(
@@ -168,10 +160,10 @@ async fn poll_once(
 
 /// 手动跟随 B 站登录重定向链, 逐跳收集 Set-Cookie.
 ///
-/// 请求 redirect_url → 检查响应 → 如果是 302/301, 从 Set-Cookie 提取,
+/// 请求 `redirect_url` → 检查响应 → 如果是 302/301, 从 Set-Cookie 提取,
 /// 跟随 Location → 循环直到 200 或非重定向状态码.
 ///
-/// 额外兜底: 从原始重定向 URL 的 query 参数提取 SESSDATA/bili_jct/DedeUserID,
+/// 额外兜底: 从原始重定向 URL 的 query 参数提取 `SESSDATA/bili_jct/DedeUserID`,
 /// 因为 B 站 crossDomain 端点把这些值同时放在 URL query 和 Set-Cookie 中.
 async fn collect_login_cookies(
     client: &reqwest::Client,
@@ -185,7 +177,7 @@ async fn collect_login_cookies(
     let base_url = reqwest::Url::parse(&current_url)
         .unwrap_or_else(|_| reqwest::Url::parse("https://www.bilibili.com").unwrap());
 
-    for _hop in 0..max_hops {
+    for hop in 0..max_hops {
         let resp = client
             .get(&current_url)
             .header(
@@ -201,7 +193,7 @@ async fn collect_login_cookies(
 
         let status = resp.status();
         tracing::debug!(
-            "重定向 {_hop}: {status} ← {current_url}, 收集 {} cookies",
+            "重定向 {hop}: {status} ← {current_url}, 收集 {} cookies",
             all_cookies.len()
         );
 
@@ -215,7 +207,8 @@ async fn collect_login_cookies(
                 current_url = if loc.starts_with("http") {
                     loc.to_string()
                 } else {
-                    base_url.join(loc)
+                    base_url
+                        .join(loc)
                         .map_err(|e| anyhow!("Location URL 拼接失败: {e}"))?
                         .to_string()
                 };
@@ -233,7 +226,7 @@ async fn collect_login_cookies(
     Ok(all_cookies)
 }
 
-/// 从 URL query 参数解析 SESSDATA/bili_jct/DedeUserID.
+/// 从 URL query 参数解析 `SESSDATA/bili_jct/DedeUserID`.
 ///
 /// B 站 crossDomain 端点把这些认证 cookie 同时放在 URL query 和 Set-Cookie 中,
 /// 作为兜底方案直接解析.
@@ -256,8 +249,14 @@ fn parse_auth_query_params(redirect_url: &str) -> HashMap<String, String> {
 fn extract_cookies_from_headers(headers: &reqwest::header::HeaderMap) -> HashMap<String, String> {
     let mut cookies = HashMap::new();
     let target_names = [
-        "SESSDATA", "bili_jct", "DedeUserID", "buvid3", "buvid4",
-        "dedeuserid", "sessdata", "ac_time_value",
+        "SESSDATA",
+        "bili_jct",
+        "DedeUserID",
+        "buvid3",
+        "buvid4",
+        "dedeuserid",
+        "sessdata",
+        "ac_time_value",
     ];
 
     for value in headers.get_all(reqwest::header::SET_COOKIE) {
@@ -341,10 +340,7 @@ mod tests {
     fn test_extract_cookies_filters_unknown_names() {
         use reqwest::header::{HeaderMap, HeaderValue, SET_COOKIE};
         let mut headers = HeaderMap::new();
-        headers.insert(
-            SET_COOKIE,
-            HeaderValue::from_static("UNKNOWN_KEY=foo"),
-        );
+        headers.insert(SET_COOKIE, HeaderValue::from_static("UNKNOWN_KEY=foo"));
         let cookies = extract_cookies_from_headers(&headers);
         assert!(cookies.is_empty());
     }
@@ -365,7 +361,10 @@ mod tests {
     fn test_parse_auth_query_params_from_cross_domain_url() {
         let url = "https://passport.bilibili.com/x/passport-login/web/crossDomain?DedeUserID=12345&DedeUserID__ckMd5=abc&SESSDATA=deadbeef&bili_jct=xyz123&gourl=https%3A%2F%2Fwww.bilibili.com";
         let cookies = parse_auth_query_params(url);
-        assert_eq!(cookies.get("SESSDATA").map(String::as_str), Some("deadbeef"));
+        assert_eq!(
+            cookies.get("SESSDATA").map(String::as_str),
+            Some("deadbeef")
+        );
         assert_eq!(cookies.get("bili_jct").map(String::as_str), Some("xyz123"));
         assert_eq!(cookies.get("DedeUserID").map(String::as_str), Some("12345"));
     }

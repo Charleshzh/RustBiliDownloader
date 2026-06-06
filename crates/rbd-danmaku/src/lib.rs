@@ -11,12 +11,6 @@
 
 #![warn(missing_docs)]
 
-/// 弹幕读取 (XML / protobuf / web protobuf).
-pub mod reader;
-/// 弹幕写入 (ASS / JSON 调试).
-pub mod writer;
-/// 弹幕渲染 (XML/protobuf → ASS 转换).
-pub mod render;
 /// 颜色计算 (alpha + BGR 转换).
 pub mod color;
 /// 布局算法 (row conflict resolution).
@@ -25,6 +19,12 @@ pub mod layout;
 pub mod model;
 /// 弹幕渲染选项.
 pub mod options;
+/// 弹幕读取 (XML / protobuf / web protobuf).
+pub mod reader;
+/// 弹幕渲染 (XML/protobuf → ASS 转换).
+pub mod render;
+/// 弹幕写入 (ASS / JSON 调试).
+pub mod writer;
 
 pub use color::{ass_color_alpha_tag, opacity_to_ass_alpha, outline_width, rgb_to_ass_color};
 pub use layout::RowTracker;

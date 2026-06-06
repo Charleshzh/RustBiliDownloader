@@ -13,10 +13,10 @@ use governor::{
 use std::num::NonZeroU32;
 use std::time::Duration;
 
-/// governor 的 RateLimiter 类型别名.
+/// governor 的 `RateLimiter` 类型别名.
 pub type RateLimiter = GovernorRateLimiter<NotKeyed, InMemoryState, DefaultClock>;
 
-/// 创建默认 RateLimiter.
+/// 创建默认 `RateLimiter`.
 ///
 /// `rps`: 每秒请求数
 #[must_use]
@@ -40,7 +40,11 @@ pub async fn tick_n(limiter: &RateLimiter, n: u32) {
 /// 推荐 rps: 未登录 50, 登录 200.
 #[must_use]
 pub fn recommended_rps(logged_in: bool) -> u32 {
-    if logged_in { 200 } else { 50 }
+    if logged_in {
+        200
+    } else {
+        50
+    }
 }
 
 /// 两个请求之间的最小间隔 (`Duration`).

@@ -21,8 +21,8 @@ pub enum LogTarget {
 ///
 /// 返回的 [`WorkerGuard`] 必须保留在 `main` 作用域, 丢弃后日志写入会停止.
 pub fn init(target: LogTarget, log_file: Option<&Path>) -> anyhow::Result<WorkerGuard> {
-    let env_filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new("info,rbd=debug"));
+    let env_filter =
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info,rbd=debug"));
 
     match target {
         LogTarget::Stderr => {
@@ -63,8 +63,7 @@ pub fn init(target: LogTarget, log_file: Option<&Path>) -> anyhow::Result<Worker
             std::fs::create_dir_all(dir)?;
             let file_appender = tracing_appender::rolling::daily(dir, file_name);
             let (file_writer, _file_guard) = tracing_appender::non_blocking(file_appender);
-            let (stderr_writer, stderr_guard) =
-                tracing_appender::non_blocking(std::io::stderr());
+            let (stderr_writer, stderr_guard) = tracing_appender::non_blocking(std::io::stderr());
 
             let stderr_layer = fmt::layer()
                 .with_writer(stderr_writer)

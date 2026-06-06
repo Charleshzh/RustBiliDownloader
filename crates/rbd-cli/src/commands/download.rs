@@ -20,6 +20,7 @@ use crate::progress::CliProgress;
 
 /// 下载命令参数.
 #[derive(Debug, Clone)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct DownloadArgs {
     /// 视频 URL 或 BV/AV 号
     pub url: String,
@@ -48,10 +49,10 @@ pub struct DownloadArgs {
 }
 
 /// 执行下载命令.
+#[allow(clippy::too_many_lines)]
 pub async fn run(args: DownloadArgs) -> Result<()> {
     // 1. 解析 URL
-    let normalized = parse_url(&args.url)
-        .with_context(|| format!("URL 解析失败: {}", args.url))?;
+    let normalized = parse_url(&args.url).with_context(|| format!("URL 解析失败: {}", args.url))?;
     tracing::info!("已解析: {:?}", normalized);
 
     // 2. 构建 API 客户端
@@ -85,19 +86,13 @@ pub async fn run(args: DownloadArgs) -> Result<()> {
 
     for (i, page) in vinfo.pages.iter().enumerate() {
         if vinfo.pages.len() > 1 {
-            tracing::info!(
-                "下载分 P {}/{}: {}",
-                i + 1,
-                vinfo.pages.len(),
-                page.title
-            );
+            tracing::info!("下载分 P {}/{}: {}", i + 1, vinfo.pages.len(), page.title);
         }
 
         // 获取 playurl
         // 获取 playurl (复用 API 客户端, clone 共享连接池)
         let play_client = PlayUrlClient::new(api.clone());
-        let chain = FallbackChain::default_for(None, is_bangumi)
-            .with_min_quality(min_quality);
+        let chain = FallbackChain::default_for(None, is_bangumi).with_min_quality(min_quality);
 
         let fetch_result = chain
             .fetch(&play_client, &vinfo.bvid, page.cid, is_bangumi)
@@ -106,17 +101,22 @@ pub async fn run(args: DownloadArgs) -> Result<()> {
 
         // 选择最佳视频/音频 (或交互式选择)
         let (video, audio) = if is_interactive {
-            select_tracks_interactive(&fetch_result.videos, &fetch_result.audios, args.video_only, args.audio_only)
+            select_tracks_interactive(
+                &fetch_result.videos,
+                &fetch_result.audios,
+                args.video_only,
+                args.audio_only,
+            )
         } else {
-            let v = if !args.audio_only {
+            let v = if args.audio_only {
+                None
+            } else {
                 select_best_video(&fetch_result.videos, args.vcodec_priority.as_deref())
-            } else {
-                None
             };
-            let a = if !args.video_only {
-                select_best_audio(&fetch_result.audios)
-            } else {
+            let a = if args.video_only {
                 None
+            } else {
+                select_best_audio(&fetch_result.audios)
             };
             (v, a)
         };
@@ -136,7 +136,7 @@ pub async fn run(args: DownloadArgs) -> Result<()> {
             .collect::<Vec<_>>()
             .join("_");
 
-        let is_combined = video.map_or(false, |v| v.is_combined);
+        let is_combined = video.is_some_and(|v| v.is_combined);
         let video_ext = if is_combined { "mp4" } else { "m4s" };
         let video_path = video.map(|_| output_dir.join(format!("{safe_title}_video.{video_ext}")));
         let audio_path = audio.map(|_| output_dir.join(format!("{safe_title}_audio.m4s")));
@@ -186,31 +186,33 @@ pub async fn run(args: DownloadArgs) -> Result<()> {
         });
 
         // 创建进度条并在下载回调中实时更新
-        let progress_bar = CliProgress::new(100, &format!("下载 {}", safe_title));
+        let progress_bar = CliProgress::new(100, &format!("下载 {safe_title}"));
         let pb = progress_bar.clone();
 
         let (v_path_opt, a_path_opt) = manager
-            .download_concurrent(
-                video_spec,
-                audio_spec,
-                None,
-                move |event| {
-                    match event {
-                        DownloadEvent::Start { task_id, total } => {
-                            tracing::info!("开始下载: {task_id} ({total} 字节)");
-                        }
-                        DownloadEvent::Progress { downloaded, total, task_id, .. } => {
-                            let pct = if total > 0 { (downloaded * 100 / total) as u64 } else { 0 };
-                            pb.set_position(pct);
-                            tracing::debug!("{task_id}: {downloaded}/{total}");
-                        }
-                        DownloadEvent::Done { task_id, .. } => {
-                            tracing::info!("下载完成: {task_id}");
-                        }
-                        _ => {}
-                    }
-                },
-            )
+            .download_concurrent(video_spec, audio_spec, None, move |event| match event {
+                DownloadEvent::Start { task_id, total } => {
+                    tracing::info!("开始下载: {task_id} ({total} 字节)");
+                }
+                DownloadEvent::Progress {
+                    downloaded,
+                    total,
+                    task_id,
+                    ..
+                } => {
+                    let pct = if total > 0 {
+                        downloaded * 100 / total
+                    } else {
+                        0
+                    };
+                    pb.set_position(pct);
+                    tracing::debug!("{task_id}: {downloaded}/{total}");
+                }
+                DownloadEvent::Done { task_id, .. } => {
+                    tracing::info!("下载完成: {task_id}");
+                }
+                _ => {}
+            })
             .await
             .with_context(|| format!("下载失败 (分 P {})", i + 1))?;
 
@@ -219,10 +221,10 @@ pub async fn run(args: DownloadArgs) -> Result<()> {
         // 混流: 仅当视频和音频都存在时执行
         match (v_path_opt.as_ref(), a_path_opt.as_ref()) {
             (Some(v_path), Some(a_path)) => {
-                let video_codec = video.map(|v| v.codec.as_str()).unwrap_or("avc");
-                let audio_codec = audio.map(|a| a.codec.as_str()).unwrap_or("aac");
-                let is_hdr = video.map_or(false, |v| v.is_hdr);
-                let is_dolby = video.map_or(false, |v| v.is_dolby_vision);
+                let video_codec = video.map_or("avc", |v| v.codec.as_str());
+                let audio_codec = audio.map_or("aac", |a| a.codec.as_str());
+                let is_hdr = video.is_some_and(|v| v.is_hdr);
+                let is_dolby = video.is_some_and(|v| v.is_dolby_vision);
                 mux_files(
                     v_path,
                     a_path,
@@ -252,15 +254,7 @@ pub async fn run(args: DownloadArgs) -> Result<()> {
 
         // 下载字幕
         if !args.no_subtitle {
-            match fetch_subtitles(
-                &api,
-                &vinfo.bvid,
-                page.cid,
-                &output_dir,
-                &safe_title,
-            )
-            .await
-            {
+            match fetch_subtitles(&api, &vinfo.bvid, page.cid, &output_dir, &safe_title).await {
                 Ok(n) if n > 0 => tracing::info!("下载了 {n} 个字幕"),
                 Ok(_) => tracing::debug!("无字幕"),
                 Err(e) => tracing::warn!("字幕下载失败: {e}"),
@@ -269,11 +263,7 @@ pub async fn run(args: DownloadArgs) -> Result<()> {
 
         // 下载弹幕
         if !args.no_danmaku {
-            match fetch_danmaku(&api, &vinfo.bvid, page.cid, &output_dir, &safe_title)
-            {
-                Ok(()) => tracing::info!("弹幕已下载"),
-                Err(e) => tracing::warn!("弹幕下载失败: {e}"),
-            }
+            fetch_danmaku(&api, &vinfo.bvid, page.cid, &output_dir, &safe_title);
         }
 
         tracing::info!("分 P {} 完成", i + 1);
@@ -307,7 +297,7 @@ fn select_best_video<'a>(
 }
 
 /// 选择最佳音频轨.
-fn select_best_audio<'a>(tracks: &'a [AudioTrack]) -> Option<&'a AudioTrack> {
+fn select_best_audio(tracks: &[AudioTrack]) -> Option<&AudioTrack> {
     if tracks.is_empty() {
         return None;
     }
@@ -327,19 +317,21 @@ fn build_default_headers() -> HeaderMap {
     let mut headers = HeaderMap::new();
     headers.insert(
         USER_AGENT,
-        HeaderValue::from_static(
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        ),
+        HeaderValue::from_static("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"),
     );
-    headers.insert(REFERER, HeaderValue::from_static("https://www.bilibili.com"));
+    headers.insert(
+        REFERER,
+        HeaderValue::from_static("https://www.bilibili.com"),
+    );
     headers
 }
 
 /// 混流 video + audio → MP4.
 ///
 /// 根据实际的视频/音频编码选择合适的混流策略:
-/// - `avc` + `aac`: DashCopy (已委托 ffmpeg)
+/// - `avc` + `aac`: `DashCopy` (已委托 ffmpeg)
 /// - `hevc` / `av1` / 杜比: ffmpeg merge/transcode
+#[allow(clippy::too_many_arguments)]
 fn mux_files(
     video_path: &Path,
     audio_path: &Path,
@@ -383,7 +375,13 @@ fn mux_files(
                 "flac" | "eac3" => "aac",
                 _ => audio_codec,
             };
-            muxer.transcode(video_path, Some(audio_path), &output_path, target_vcodec, target_acodec)?;
+            muxer.transcode(
+                video_path,
+                Some(audio_path),
+                &output_path,
+                target_vcodec,
+                target_acodec,
+            )?;
             tracing::info!("ffmpeg 转码完成: {}", output_path.display());
         }
     }
@@ -433,10 +431,9 @@ fn fetch_danmaku(
     _cid: u64,
     _output_dir: &Path,
     _title: &str,
-) -> Result<()> {
+) {
     // TODO M5: 从 B 站 API 获取弹幕并渲染为 ASS
     tracing::debug!("弹幕下载功能将在 M5 实现");
-    Ok(())
 }
 
 /// 交互式选择视频/音频轨.
@@ -449,7 +446,15 @@ fn select_tracks_interactive<'a>(
     let video = if !audio_only && !videos.is_empty() {
         let items: Vec<String> = videos
             .iter()
-            .map(|v| format!("{} ({}) {}fps {:>6}kbps", v.quality_desc, v.codec, v.frame_rate, v.bandwidth / 1000))
+            .map(|v| {
+                format!(
+                    "{} ({}) {}fps {:>6}kbps",
+                    v.quality_desc,
+                    v.codec,
+                    v.frame_rate,
+                    v.bandwidth / 1000
+                )
+            })
             .collect();
         match dialoguer::Select::new()
             .with_prompt("选择视频画质")
@@ -467,7 +472,14 @@ fn select_tracks_interactive<'a>(
     let audio = if !video_only && !audios.is_empty() {
         let items: Vec<String> = audios
             .iter()
-            .map(|a| format!("{} ({}) {:>6}kbps", a.quality_desc, a.codec, a.bandwidth / 1000))
+            .map(|a| {
+                format!(
+                    "{} ({}) {:>6}kbps",
+                    a.quality_desc,
+                    a.codec,
+                    a.bandwidth / 1000
+                )
+            })
             .collect();
         match dialoguer::Select::new()
             .with_prompt("选择音频品质")
@@ -486,7 +498,12 @@ fn select_tracks_interactive<'a>(
 }
 
 /// 下载封面图片.
-async fn download_cover(_api: &BilibiliApi, pic_url: &str, output_dir: &Path, title: &str) -> Result<()> {
+async fn download_cover(
+    _api: &BilibiliApi,
+    pic_url: &str,
+    output_dir: &Path,
+    title: &str,
+) -> Result<()> {
     let safe_title = rbd_foundation::path::sanitize_filename(title);
     let ext = pic_url
         .rsplit('.')

@@ -1,9 +1,9 @@
 //! detector
 
-use std::path::Path;
 use anyhow::Result;
+use std::path::Path;
 
-/// MediaInfo
+/// `MediaInfo`
 #[derive(Debug, Clone, Default)]
 pub struct MediaInfo {
     /// duration
@@ -19,7 +19,7 @@ pub struct MediaInfo {
 }
 
 /// probe
-pub async fn probe(_path: &Path) -> Result<MediaInfo> {
+pub fn probe(_path: &Path) -> Result<MediaInfo> {
     // Dummy implementation
     Ok(MediaInfo {
         duration: 0.0,

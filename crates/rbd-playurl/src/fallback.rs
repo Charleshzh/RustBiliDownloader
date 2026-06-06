@@ -22,7 +22,13 @@ pub enum Mode {
 
 impl Mode {
     /// 所有模式.
-    pub const ALL: [Mode; 5] = [Mode::Html5, Mode::Web, Mode::WebBangumi, Mode::Tv, Mode::App];
+    pub const ALL: [Mode; 5] = [
+        Mode::Html5,
+        Mode::Web,
+        Mode::WebBangumi,
+        Mode::Tv,
+        Mode::App,
+    ];
 
     /// 模式名称.
     #[must_use]

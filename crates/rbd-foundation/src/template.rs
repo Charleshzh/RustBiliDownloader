@@ -20,7 +20,7 @@
 
 use tera::{Context, Tera};
 
-/// 默认文件命名模板 (BBDown 默认值).
+/// 默认文件命名模板 (`BBDown` 默认值).
 pub const DEFAULT_PATTERN: &str = "{title}/{p_title}";
 
 /// 创建单次使用的 Tera 渲染器.
@@ -43,11 +43,11 @@ fn pattern_to_tera(pattern: &str) -> String {
     for c in pattern.chars() {
         match c {
             '{' => {
-                if !in_brace {
+                if in_brace {
+                    out.push(c);
+                } else {
                     out.push_str("{{ ");
                     in_brace = true;
-                } else {
-                    out.push(c);
                 }
             }
             '}' => {

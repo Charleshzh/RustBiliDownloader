@@ -3,7 +3,7 @@
 //! 使用 `rustc_hash::FxHashMap` 快速追踪每行的最后占用时间,
 //! 防止弹幕重叠.
 
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxBuildHasher, FxHashMap};
 
 /// 行追踪器: 记录每行最后被占用的时间.
 pub struct RowTracker {
@@ -23,11 +23,11 @@ impl RowTracker {
     #[must_use]
     pub fn with_capacity(cap: usize) -> Self {
         Self {
-            last_used: FxHashMap::with_capacity_and_hasher(cap, Default::default()),
+            last_used: FxHashMap::with_capacity_and_hasher(cap, FxBuildHasher),
         }
     }
 
-    /// 查找第一行在 `time` 时刻空闲 (last_used[row] + duration <= time).
+    /// 查找第一行在 `time` 时刻空闲 (`last_used`[row] + duration <= time).
     ///
     /// 返回行号 (0-based), 所有行均占用则返回 `None`.
     #[must_use]

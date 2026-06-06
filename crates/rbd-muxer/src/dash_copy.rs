@@ -3,10 +3,10 @@
 //! **v1.0 策略**: 委托 ffmpeg 执行 DASH remux, 因为简单的字节拼接会产生损坏的 MP4.
 //! 后续版本可引入 `mp4` crate 实现纯 Rust m4s box 重组.
 
-use std::path::{Path, PathBuf};
 use anyhow::{anyhow, Result};
+use std::path::{Path, PathBuf};
 
-/// DashCopyMuxer — DASH 片段混流器.
+/// `DashCopyMuxer` — DASH 片段混流器.
 ///
 /// 目前委托 `FfmpegMuxer::merge_copy` 完成.
 #[derive(Debug, Clone, Default)]
@@ -34,6 +34,6 @@ impl DashCopyMuxer {
             .first()
             .ok_or_else(|| anyhow!("缺少视频 m4s 文件"))?;
         let audio = audio_m4s_files.and_then(|a| a.first());
-        muxer.merge_copy(video, audio.map(|a| a.as_path()), output)
+        muxer.merge_copy(video, audio.map(std::path::PathBuf::as_path), output)
     }
 }

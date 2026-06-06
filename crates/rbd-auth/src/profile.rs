@@ -20,11 +20,11 @@ pub struct AuthProfile {
     pub uname: String,
     /// 主 cookie — SESSDATA.
     pub sessdata: String,
-    /// CSRF token — bili_jct.
+    /// CSRF token — `bili_jct`.
     pub bili_jct: String,
-    /// TV 登录专用 — DedeUserID.
+    /// TV 登录专用 — `DedeUserID`.
     pub dedeuserid: String,
-    /// TV 登录专用 — access_token 有效期.
+    /// TV 登录专用 — `access_token` 有效期.
     pub ac_time_value: String,
     /// 设备指纹 v3.
     pub buvid3: String,
@@ -107,25 +107,25 @@ impl AuthProfile {
     /// 合并另一个 profile 的字段 (后者优先).
     pub fn merge(&mut self, other: &Self) {
         if !other.sessdata.is_empty() {
-            self.sessdata = other.sessdata.clone();
+            self.sessdata.clone_from(&other.sessdata);
         }
         if !other.bili_jct.is_empty() {
-            self.bili_jct = other.bili_jct.clone();
+            self.bili_jct.clone_from(&other.bili_jct);
         }
         if !other.dedeuserid.is_empty() {
-            self.dedeuserid = other.dedeuserid.clone();
+            self.dedeuserid.clone_from(&other.dedeuserid);
         }
         if !other.buvid3.is_empty() {
-            self.buvid3 = other.buvid3.clone();
+            self.buvid3.clone_from(&other.buvid3);
         }
         if !other.buvid4.is_empty() {
-            self.buvid4 = other.buvid4.clone();
+            self.buvid4.clone_from(&other.buvid4);
         }
         if other.mid != 0 {
             self.mid = other.mid;
         }
         if !other.uname.is_empty() {
-            self.uname = other.uname.clone();
+            self.uname.clone_from(&other.uname);
         }
         for (k, v) in &other.cookies {
             self.cookies.insert(k.clone(), v.clone());

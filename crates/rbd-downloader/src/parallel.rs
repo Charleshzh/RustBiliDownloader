@@ -93,8 +93,16 @@ impl ParallelDownloader {
             return Ok(spec.dest);
         }
 
-        let num_threads = if spec.num_threads == 0 { self.num_threads } else { spec.num_threads };
-        let block_size = if spec.block_size == 0 { self.block_size } else { spec.block_size };
+        let num_threads = if spec.num_threads == 0 {
+            self.num_threads
+        } else {
+            spec.num_threads
+        };
+        let block_size = if spec.block_size == 0 {
+            self.block_size
+        } else {
+            spec.block_size
+        };
         let blocks = calculate_blocks(total, block_size, num_threads);
 
         // 预分配文件并打开用于流式写入
@@ -123,7 +131,10 @@ impl ParallelDownloader {
             let limiter = limiter.clone();
             let semaphore = Arc::clone(&semaphore);
             handles.push(tokio::spawn(async move {
-                let _permit = semaphore.acquire_owned().await.map_err(|e| anyhow!("信号量获取失败: {e}"))?;
+                let _permit = semaphore
+                    .acquire_owned()
+                    .await
+                    .map_err(|e| anyhow!("信号量获取失败: {e}"))?;
                 if let Some(limiter) = limiter.as_ref() {
                     rbd_foundation::ratelimit::tick(limiter).await;
                 }
@@ -145,7 +156,9 @@ impl ParallelDownloader {
         }
 
         for handle in handles {
-            handle.await.map_err(|e| anyhow!("下载任务 join 失败: {e}"))??;
+            handle
+                .await
+                .map_err(|e| anyhow!("下载任务 join 失败: {e}"))??;
             let current = downloaded.load(std::sync::atomic::Ordering::Relaxed);
             let elapsed = started_at.elapsed().as_secs_f64().max(0.001);
             on_event(DownloadEvent::Progress {
@@ -176,7 +189,7 @@ pub fn calculate_blocks(total: u64, block_size: u64, num_threads: usize) -> Vec<
 
     let n = num_threads.max(1) as u64;
     // ceiling division: 确保不产生超过 n 的块
-    let chunk_size = ((total + n - 1) / n).max(block_size.max(1));
+    let chunk_size = total.div_ceil(n).max(block_size.max(1));
     let mut blocks = Vec::new();
     let mut start = 0u64;
     while start < total {

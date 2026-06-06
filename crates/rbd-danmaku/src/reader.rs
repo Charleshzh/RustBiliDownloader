@@ -30,13 +30,12 @@ pub fn parse_xml(xml: &str) -> Result<DanmakuList> {
     let mut buf = Vec::new();
     loop {
         match reader.read_event_into(&mut buf) {
-            Ok(Event::Start(e)) | Ok(Event::Empty(e)) => {
+            Ok(Event::Start(e) | Event::Empty(e)) => {
                 if e.name().as_ref() == b"d" {
                     let mut p_attr = String::new();
                     for attr in e.attributes().flatten() {
                         if attr.key.as_ref() == b"p" {
-                            p_attr =
-                                String::from_utf8_lossy(&attr.value).into_owned();
+                            p_attr = String::from_utf8_lossy(&attr.value).into_owned();
                         }
                     }
                     // 读取文本内容
@@ -71,7 +70,7 @@ fn parse_d_attr(p: &str, content: &str) -> Option<Danmaku> {
     let time: f32 = parts[0].parse().ok()?;
     let mode: u8 = parts[1].parse().ok()?;
     let font_size: u8 = parts[2].parse().ok()?;
-    let color: u32 = u32::from_str_radix(parts[3], 10).ok()?;
+    let color: u32 = parts[3].parse::<u32>().ok()?;
     let _date: u64 = parts[4].parse().ok()?;
     let _pool: u8 = parts[5].parse().ok()?;
     let sender_id: u64 = parts[6].parse().ok()?;
@@ -127,7 +126,7 @@ pub fn parse_json(json_str: &str) -> Result<DanmakuList> {
         25
     }
     fn default_color() -> u32 {
-        0xFFFFFF
+        0x00FF_FFFF
     }
 
     let resp: Response = serde_json::from_str(json_str)?;
@@ -154,7 +153,7 @@ pub fn parse_json(json_str: &str) -> Result<DanmakuList> {
 
 /// Protobuf 解析模块.
 ///
-/// 使用 prost 解析 B 站二进制弹幕格式 (DmSegMobileReply).
+/// 使用 prost 解析 B 站二进制弹幕格式 (`DmSegMobileReply`).
 ///
 /// proto 定义来自 `bilibili.community.service.dm.v1`, 此处手动构造 prost 类型
 /// 以避免 `protoc` 编译依赖. 消息结构与官方 proto 定义完全一致.
@@ -162,7 +161,7 @@ pub fn parse_json(json_str: &str) -> Result<DanmakuList> {
 /// **模式映射** (B 站 protobuf 与 XML 弹幕模式一致):
 /// - 1 = 滚动, 4 = 底部, 5 = 顶部, 6 = 逆向, 7 = 精确控制, 8 = 高级
 pub mod protobuf {
-    use super::*;
+    use super::{Result, DanmakuList, Danmaku};
     use prost::Message;
 
     /// B 站 protobuf 弹幕响应.
@@ -340,9 +339,7 @@ mod tests {
             id_str: 0,
         };
 
-        let reply = protobuf::DmSegMobileReply {
-            elems: vec![elem],
-        };
+        let reply = protobuf::DmSegMobileReply { elems: vec![elem] };
 
         // 编码为 protobuf 二进制
         let bytes = prost::Message::encode_to_vec(&reply);

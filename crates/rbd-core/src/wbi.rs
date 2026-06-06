@@ -11,10 +11,10 @@ use std::time::{Duration, Instant};
 
 use md5::{Digest, Md5};
 
-/// mixin_key 重排表 (固定 66 字符, B 站算法规定).
+/// `mixin_key` 重排表 (固定 66 字符, B 站算法规定).
 ///
-/// **算法来源**: BBDown mixinKeyEncTab + social-sister-yi/bilibili-API-collect WBI 文档.
-/// 实际只用前 32 个索引; 末尾元素保留仅为对齐 BBDown 实现.
+/// **算法来源**: `BBDown` mixinKeyEncTab + social-sister-yi/bilibili-API-collect WBI 文档.
+/// 实际只用前 32 个索引; 末尾元素保留仅为对齐 `BBDown` 实现.
 const MIXIN_TABLE: [usize; 66] = [
     46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35, 27, 43, 5, 49, 33, 9, 42, 19, 29,
     28, 14, 39, 12, 38, 41, 13, 37, 48, 7, 16, 24, 55, 40, 61, 26, 17, 0, 1, 3, 47, 5, 44, 37, 52,
@@ -24,18 +24,18 @@ const MIXIN_TABLE: [usize; 66] = [
 /// WBI 缓存的 key
 #[derive(Debug, Clone)]
 pub struct WbiKey {
-    /// img_key (32 字符 hex)
+    /// `img_key` (32 字符 hex)
     pub img_key: String,
-    /// sub_key (32 字符 hex)
+    /// `sub_key` (32 字符 hex)
     pub sub_key: String,
-    /// mixin_key (32 字符, 实时计算)
+    /// `mixin_key` (32 字符, 实时计算)
     pub mixin_key: String,
     /// 缓存生成时间
     pub cached_at: Instant,
 }
 
 impl WbiKey {
-    /// 从 img_url / sub_url 直接构造.
+    /// 从 `img_url` / `sub_url` 直接构造.
     pub fn from_urls(img_url: &str, sub_url: &str) -> Self {
         Self::from_nav(img_url, sub_url)
     }
@@ -53,7 +53,7 @@ impl WbiKey {
         }
     }
 
-    /// 缓存是否过期 (默认 1h, 与 BBDown 一致).
+    /// 缓存是否过期 (默认 1h, 与 `BBDown` 一致).
     pub fn is_expired(&self) -> bool {
         self.cached_at.elapsed() > Duration::from_secs(3600)
     }
@@ -69,7 +69,7 @@ fn extract_key_from_url(url: &str) -> String {
     filename.split('.').next().unwrap_or("").to_string()
 }
 
-/// 计算 mixin_key: img_key + sub_key 后, 按 MIXIN_TABLE 重排取前 32.
+/// 计算 `mixin_key`: `img_key` + `sub_key` 后, 按 `MIXIN_TABLE` 重排取前 32.
 fn compute_mixin_key(img_key: &str, sub_key: &str) -> String {
     let raw = format!("{img_key}{sub_key}");
     let chars: Vec<char> = raw.chars().collect();
@@ -111,12 +111,16 @@ pub fn sign_query(params: &[(&str, &str)], wbi: &WbiKey) -> String {
 fn url_encode_component(s: &str) -> String {
     s.chars()
         .map(|c| match c {
-            'A'..='Z' | 'a'..='z' | '0'..='9' | '_' | '-' | '~' => c.to_string(),
-            '!' | '*' | '(' | ')' | '\'' => c.to_string(),
+            'A'..='Z' | 'a'..='z' | '0'..='9' | '_' | '-' | '~' | '!' | '*' | '(' | ')' | '\'' => {
+                c.to_string()
+            }
             c => {
                 let mut buf = [0u8; 4];
                 let bytes = c.encode_utf8(&mut buf).as_bytes();
-                bytes.iter().map(|b| format!("%{b:02X}")).collect()
+                bytes.iter().fold(String::new(), |mut s, b| {
+                    let _ = std::fmt::Write::write_fmt(&mut s, format_args!("%{b:02X}"));
+                    s
+                })
             }
         })
         .collect()
@@ -129,7 +133,10 @@ mod tests {
     #[test]
     fn test_extract_key() {
         let url = "https://i0.hdslb.com/bfs/wbi/49a55d49a55d49a955e2322e3666f6fe6f6f6f6f.png";
-        assert_eq!(extract_key_from_url(url), "49a55d49a55d49a955e2322e3666f6fe6f6f6f6f");
+        assert_eq!(
+            extract_key_from_url(url),
+            "49a55d49a55d49a955e2322e3666f6fe6f6f6f6f"
+        );
     }
 
     #[test]

@@ -21,9 +21,7 @@ pub async fn is_session_valid(api: &BilibiliApi, profile: &AuthProfile) -> bool 
     let result: Result<serde_json::Value> = api.get_json(url).await;
 
     match result {
-        Ok(value) => value["data"]["isLogin"]
-            .as_bool()
-            .unwrap_or(false),
+        Ok(value) => value["data"]["isLogin"].as_bool().unwrap_or(false),
         Err(err) => {
             tracing::warn!("检测登录态失败: {err}");
             false

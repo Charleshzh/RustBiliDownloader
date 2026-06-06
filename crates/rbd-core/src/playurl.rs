@@ -167,7 +167,8 @@ impl PlayUrlData {
                             resolution: format!("{}x{}", video.width, video.height),
                             bandwidth: video.bandwidth,
                             is_hdr: codecs.to_ascii_lowercase().contains("hdr"),
-                            is_dolby_vision: codecs.starts_with("dvh1") || codecs.starts_with("dvhe"),
+                            is_dolby_vision: codecs.starts_with("dvh1")
+                                || codecs.starts_with("dvhe"),
                             is_high_frame_rate: frame_rate >= 50.0,
                             is_combined: false,
                             urls: collect_urls(video.base_url, video.backup_url),
@@ -184,10 +185,18 @@ impl PlayUrlData {
         let mut tracks = Vec::new();
         if let Some(dash) = self.dash {
             if let Some(audio) = dash.audio {
-                tracks.extend(audio.into_iter().map(|track| into_audio_track(track, false, false)));
+                tracks.extend(
+                    audio
+                        .into_iter()
+                        .map(|track| into_audio_track(track, false, false)),
+                );
             }
             if let Some(dolby) = dash.dolby.and_then(|dolby| dolby.audio) {
-                tracks.extend(dolby.into_iter().map(|track| into_audio_track(track, true, false)));
+                tracks.extend(
+                    dolby
+                        .into_iter()
+                        .map(|track| into_audio_track(track, true, false)),
+                );
             }
             if let Some(flac) = dash.flac.and_then(|flac| flac.audio) {
                 tracks.push(into_audio_track(flac, false, true));
@@ -197,7 +206,7 @@ impl PlayUrlData {
     }
 }
 
-/// 将 accept_description 规格化为描述列表.
+/// 将 `accept_description` 规格化为描述列表.
 pub fn accept_description_to_quality_desc(accept: &[String]) -> Vec<String> {
     accept.iter().map(|item| item.trim().to_string()).collect()
 }

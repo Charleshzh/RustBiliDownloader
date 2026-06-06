@@ -40,7 +40,7 @@ pub fn parse_set_cookie(headers: &[String]) -> HashMap<String, String> {
 ///
 /// 示例: `{"SESSDATA": "abc"}` → `"SESSDATA=abc"`
 #[must_use]
-pub fn to_cookie_header(cookies: &HashMap<String, String>) -> String {
+pub fn to_cookie_header<S: std::hash::BuildHasher>(cookies: &HashMap<String, String, S>) -> String {
     cookies
         .iter()
         .map(|(k, v)| format!("{k}={v}"))
@@ -49,7 +49,7 @@ pub fn to_cookie_header(cookies: &HashMap<String, String>) -> String {
 }
 
 /// 合并两个 cookie map, `other` 中的键会覆盖 `base`.
-pub fn merge_cookies(base: &mut HashMap<String, String>, other: &HashMap<String, String>) {
+pub fn merge_cookies<S1: std::hash::BuildHasher, S2: std::hash::BuildHasher>(base: &mut HashMap<String, String, S1>, other: &HashMap<String, String, S2>) {
     for (k, v) in other {
         base.insert(k.clone(), v.clone());
     }

@@ -17,7 +17,10 @@ pub async fn run(url: &str) -> Result<()> {
         Ok(vinfo) => {
             println!("标题:        {}", vinfo.title);
             if !vinfo.owner_name.is_empty() {
-                println!("UP主:        {} (mid={})", vinfo.owner_name, vinfo.owner_mid);
+                println!(
+                    "UP主:        {} (mid={})",
+                    vinfo.owner_name, vinfo.owner_mid
+                );
             }
             println!("分P数:       {}", vinfo.pages.len());
             for (i, p) in vinfo.pages.iter().enumerate() {

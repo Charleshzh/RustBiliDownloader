@@ -65,7 +65,7 @@ impl RenderOptions {
     #[must_use]
     pub fn effective_max_rows(&self) -> u32 {
         self.max_rows.unwrap_or_else(|| {
-            let h = self.font_size as u32 + self.line_spacing;
+            let h = u32::from(self.font_size) + self.line_spacing;
             if h == 0 {
                 12
             } else {

@@ -52,7 +52,9 @@ impl ExtractorRegistry {
 
     /// 查找匹配的抽取器.
     pub fn find(&self, id: &NormalizedId) -> Option<&dyn Extractor> {
-        self.fetchers.iter().find_map(|f| f.matches(id).then_some(f.as_ref()))
+        self.fetchers
+            .iter()
+            .find_map(|f| f.matches(id).then_some(f.as_ref()))
     }
 
     /// 执行抽取.
@@ -176,12 +178,12 @@ impl Extractor for CheeseExtractor {
         };
 
         let value = api.get_cheese_season(*season_id).await?;
-        parse_cheese_season_response(&value)
+        Ok(parse_cheese_season_response(&value))
     }
 }
 
 /// 解析课程 season 响应 (结构同番剧, 但用 data 而非 result).
-fn parse_cheese_season_response(v: &serde_json::Value) -> Result<VInfo> {
+fn parse_cheese_season_response(v: &serde_json::Value) -> VInfo {
     let data = &v["data"];
     let episodes = data["episodes"].as_array();
 
@@ -212,14 +214,13 @@ fn parse_cheese_season_response(v: &serde_json::Value) -> Result<VInfo> {
         })
         .unwrap_or_default();
 
-    Ok(VInfo {
+    VInfo {
         title: data["title"].as_str().unwrap_or("课程").to_string(),
         desc: data["subtitle"].as_str().unwrap_or("").to_string(),
         pic: data["cover"].as_str().unwrap_or("").to_string(),
         pubdate: data["pub_time"]
             .as_str()
-            .map(|s| parse_publish_time(s))
-            .unwrap_or(0),
+            .map_or(0, parse_publish_time),
         owner_mid: 0,
         owner_name: String::new(),
         aid: 0,
@@ -232,7 +233,7 @@ fn parse_cheese_season_response(v: &serde_json::Value) -> Result<VInfo> {
         is_cheese: true,
         is_stein_gate: false,
         tags: vec![],
-    })
+    }
 }
 
 // ── FavListExtractor ──────────────────────────────────────────────
@@ -266,7 +267,7 @@ impl Extractor for FavListExtractor {
                     .enumerate()
                     .map(|(i, item)| {
                         let title = item["title"].as_str().unwrap_or("未命名");
-                        let _bvid = item["bvid"].as_str().unwrap_or("");   // collected in first_bvid
+                        let _bvid = item["bvid"].as_str().unwrap_or(""); // collected in first_bvid
                         let cid = item["page"]["cid"].as_u64().unwrap_or(0);
                         let duration = item["duration"].as_u64().unwrap_or(0) as u32;
                         Page {
@@ -340,7 +341,7 @@ impl Extractor for MediaListExtractor {
                     .enumerate()
                     .map(|(i, item)| {
                         let title = item["title"].as_str().unwrap_or("未命名");
-                        let _bvid = item["bvid"].as_str().unwrap_or("");   // collected in first_bvid
+                        let _bvid = item["bvid"].as_str().unwrap_or(""); // collected in first_bvid
                         let cid = item["page"]["cid"].as_u64().unwrap_or(0);
                         let duration = item["duration"].as_u64().unwrap_or(0) as u32;
                         Page {
@@ -402,10 +403,7 @@ impl Extractor for SeriesExtractor {
         let value = api.get_series(*sid).await?;
         let data = &value["data"];
 
-        let series_title = data["meta"]["name"]
-            .as_str()
-            .unwrap_or("合集")
-            .to_string();
+        let series_title = data["meta"]["name"].as_str().unwrap_or("合集").to_string();
 
         let archives = data["archives"].as_array();
         let pages: Vec<Page> = archives
@@ -520,7 +518,10 @@ impl Extractor for SpaceExtractor {
                     .map(|item| {
                         let title = item["title"].as_str().unwrap_or("未命名");
                         let cid = item["cid"].as_u64().unwrap_or(0);
-                        let duration = item["length"].as_str().and_then(|s| s.parse::<u32>().ok()).unwrap_or(0);
+                        let duration = item["length"]
+                            .as_str()
+                            .and_then(|s| s.parse::<u32>().ok())
+                            .unwrap_or(0);
                         Page {
                             page_index: 0,
                             cid,
@@ -591,7 +592,12 @@ pub fn parse_view_response(v: &serde_json::Value) -> Result<VInfo> {
         anyhow::bail!("view api failed: {}", envelope.message);
     }
 
-    let pages = envelope.data.pages.into_iter().map(Into::into).collect::<Vec<_>>();
+    let pages = envelope
+        .data
+        .pages
+        .into_iter()
+        .map(Into::into)
+        .collect::<Vec<_>>();
     Ok(VInfo {
         title: envelope.data.title,
         desc: envelope.data.desc,
@@ -811,7 +817,9 @@ impl From<PagelistPayload> for Page {
 
 impl From<BangumiEpisodePayload> for Page {
     fn from(value: BangumiEpisodePayload) -> Self {
-        let title = format!("{} {}", value.title, value.long_title).trim().to_string();
+        let title = format!("{} {}", value.title, value.long_title)
+            .trim()
+            .to_string();
         Self {
             page_index: 0,
             cid: value.cid,
@@ -833,18 +841,14 @@ fn format_dimension(dimension: &DimensionPayload) -> String {
 fn parse_publish_time(s: &str) -> i64 {
     chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S")
         .ok()
-        .map(|dt| dt.and_utc().timestamp())
-        .unwrap_or(0)
+        .map_or(0, |dt| dt.and_utc().timestamp())
 }
 
 /// 解析合集 polymer API 响应.
 pub fn parse_collection_response(v: &serde_json::Value, mid: u64) -> Result<VInfo> {
     let data = &v["data"];
 
-    let collection_title = data["meta"]["name"]
-        .as_str()
-        .unwrap_or("合集")
-        .to_string();
+    let collection_title = data["meta"]["name"].as_str().unwrap_or("合集").to_string();
 
     let archives = data["archives"].as_array();
     let pages: Vec<Page> = archives
@@ -1016,7 +1020,10 @@ mod tests {
     fn test_collection_extractor_matches() {
         let extractor = CollectionExtractor;
         assert!(extractor.matches(&NormalizedId::Collection { mid: 1, sid: 2 }));
-        assert!(!extractor.matches(&NormalizedId::UgcVideo { id: "BVxx".into(), page_index: 0 }));
+        assert!(!extractor.matches(&NormalizedId::UgcVideo {
+            id: "BVxx".into(),
+            page_index: 0
+        }));
         assert!(!extractor.matches(&NormalizedId::Favourite { fid: 1 }));
     }
 

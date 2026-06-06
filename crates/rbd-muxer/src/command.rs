@@ -9,13 +9,13 @@ pub struct FfmpegCommand {
 }
 
 impl FfmpegCommand {
-    /// 
+    /// Creates a new ffmpeg command builder.
     #[must_use]
     pub fn new() -> Self {
         Self { args: Vec::new() }
     }
 
-    /// 
+    /// Adds an input file.
     #[must_use]
     pub fn input(mut self, path: &Path) -> Self {
         self.args.push("-i".to_string());
@@ -23,7 +23,7 @@ impl FfmpegCommand {
         self
     }
 
-    /// 
+    /// Adds an output file.
     #[must_use]
     pub fn output(mut self, path: &Path) -> Self {
         self.args.push(path.to_string_lossy().to_string());
@@ -58,7 +58,7 @@ impl FfmpegCommand {
     #[must_use]
     pub fn metadata_title(mut self, t: &str) -> Self {
         self.args.push("-metadata".to_string());
-        self.args.push(format!("title={}", t));
+        self.args.push(format!("title={t}"));
         self
     }
 
@@ -66,7 +66,7 @@ impl FfmpegCommand {
     #[must_use]
     pub fn metadata_artist(mut self, a: &str) -> Self {
         self.args.push("-metadata".to_string());
-        self.args.push(format!("artist={}", a));
+        self.args.push(format!("artist={a}"));
         self
     }
 
@@ -86,7 +86,7 @@ impl FfmpegCommand {
         self
     }
 
-    /// 
+    /// Adds extra arguments.
     #[must_use]
     pub fn extra(mut self, args: &[&str]) -> Self {
         for &arg in args {
@@ -95,7 +95,7 @@ impl FfmpegCommand {
         self
     }
 
-    /// 
+    /// Builds the final argument list.
     #[must_use]
     pub fn build(self) -> Vec<String> {
         self.args

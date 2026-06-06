@@ -7,6 +7,7 @@ use crate::model::SubtitleFormat;
 /// 检查 URL 后缀: `.srt` → Srt, `.ass` / `.ssa` → Ass, `.json` → Json.
 /// 不含可识别后缀时默认返回 Json (B 站默认).
 #[must_use]
+#[allow(clippy::case_sensitive_file_extension_comparisons)]
 pub fn detect_from_url(url: &str) -> SubtitleFormat {
     let lower = url.to_lowercase();
     // 去除查询参数

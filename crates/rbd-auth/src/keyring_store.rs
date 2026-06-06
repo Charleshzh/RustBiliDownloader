@@ -42,8 +42,8 @@ pub fn load(name: &str) -> Result<AuthProfile> {
         .get_password()
         .map_err(|err| anyhow!("未找到 profile '{name}' 或 keychain 不可用: {err}"))?;
 
-    let profile: AuthProfile = serde_json::from_str(&json)
-        .map_err(|err| anyhow!("profile 解析失败: {err}"))?;
+    let profile: AuthProfile =
+        serde_json::from_str(&json).map_err(|err| anyhow!("profile 解析失败: {err}"))?;
 
     Ok(profile)
 }
@@ -73,10 +73,9 @@ pub fn list() -> Result<Vec<String>> {
     if !index_path.exists() {
         return Ok(Vec::new());
     }
-    let content = std::fs::read_to_string(&index_path)
-        .map_err(|e| anyhow!("读取 profile 索引失败: {e}"))?;
-    let names: Vec<String> = serde_json::from_str(&content)
-        .unwrap_or_default();
+    let content =
+        std::fs::read_to_string(&index_path).map_err(|e| anyhow!("读取 profile 索引失败: {e}"))?;
+    let names: Vec<String> = serde_json::from_str(&content).unwrap_or_default();
     Ok(names)
 }
 

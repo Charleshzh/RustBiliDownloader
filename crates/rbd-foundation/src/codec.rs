@@ -7,7 +7,11 @@ pub const BV_ALPHABET: &[u8; 58] = b"FcwAPNKTMug3GV5Lj7EJnHpWsx4tb8haYeviqBz6rkC
 
 /// 十六进制编码 (小写).
 pub fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
+    bytes.iter().fold(String::new(), |mut s, b| {
+        use std::fmt::Write;
+        write!(s, "{b:02x}").unwrap();
+        s
+    })
 }
 
 /// 十六进制解码.
@@ -25,11 +29,17 @@ pub fn hex_decode(s: &str) -> anyhow::Result<Vec<u8>> {
 pub fn url_encode_component(s: &str) -> String {
     s.chars()
         .map(|c| match c {
-            'A'..='Z' | 'a'..='z' | '0'..='9' | '_' | '-' | '~' | '!' | '*' | '(' | ')' | '\'' => c.to_string(),
+            'A'..='Z' | 'a'..='z' | '0'..='9' | '_' | '-' | '~' | '!' | '*' | '(' | ')' | '\'' => {
+                c.to_string()
+            }
             c => {
                 let mut buf = [0u8; 4];
                 let bytes = c.encode_utf8(&mut buf).as_bytes();
-                bytes.iter().map(|b| format!("%{b:02X}")).collect()
+                bytes.iter().fold(String::new(), |mut s, b| {
+                    use std::fmt::Write;
+                    write!(s, "%{b:02X}").unwrap();
+                    s
+                })
             }
         })
         .collect()
@@ -39,7 +49,7 @@ pub fn url_encode_component(s: &str) -> String {
 pub fn url_decode_component(s: &str) -> anyhow::Result<String> {
     percent_encoding::percent_decode_str(s)
         .decode_utf8()
-        .map(|c| c.into_owned())
+        .map(std::borrow::Cow::into_owned)
         .map_err(anyhow::Error::from)
 }
 
@@ -48,13 +58,12 @@ pub fn base58_encode(bytes: &[u8]) -> String {
     let mut result = String::new();
     let mut leading_zeros = 0;
     for &b in bytes {
-        if b == 0 {
-            leading_zeros += 1;
-        } else {
+        if b != 0 {
             break;
         }
+        leading_zeros += 1;
     }
-    let mut n: u64 = bytes.iter().fold(0u64, |acc, &b| (acc << 8) | b as u64);
+    let mut n: u64 = bytes.iter().fold(0u64, |acc, &b| (acc << 8) | u64::from(b));
     while n > 0 {
         let r = (n % 58) as usize;
         n /= 58;
@@ -68,7 +77,7 @@ pub fn base58_encode(bytes: &[u8]) -> String {
 
 /// MD5 哈希 (Hex 字符串).
 pub fn md5_hex(bytes: &[u8]) -> String {
-    use md5::{Md5, Digest};
+    use md5::{Digest, Md5};
     let mut h = Md5::new();
     h.update(bytes);
     hex_encode(&h.finalize())
@@ -103,7 +112,10 @@ mod tests {
 
     #[test]
     fn test_url_decode() {
-        assert_eq!(url_decode_component("hello%20world").unwrap(), "hello world");
+        assert_eq!(
+            url_decode_component("hello%20world").unwrap(),
+            "hello world"
+        );
         assert_eq!(url_decode_component("a%3Db").unwrap(), "a=b");
     }
 

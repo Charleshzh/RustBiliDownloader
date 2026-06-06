@@ -106,7 +106,6 @@ impl DanmakuMode {
     #[must_use]
     pub fn from_u8(v: u8) -> Self {
         match v {
-            1 => Self::Scroll,
             4 => Self::Bottom,
             5 => Self::Top,
             6 => Self::Reverse,

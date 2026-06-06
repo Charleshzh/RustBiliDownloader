@@ -20,15 +20,17 @@ pub async fn run_web(profile: Option<String>) -> Result<()> {
 
     eprintln!("[DEBUG] 收集到的 cookies: {cookies:?}");
 
-    let mut auth_profile = AuthProfile::default();
-    auth_profile.name = profile_name.clone();
+    let mut auth_profile = AuthProfile {
+        name: profile_name.clone(),
+        ..Default::default()
+    };
     for (key, value) in &cookies {
         match key.as_str() {
-            "SESSDATA" => auth_profile.sessdata = value.clone(),
-            "bili_jct" => auth_profile.bili_jct = value.clone(),
-            "DedeUserID" => auth_profile.dedeuserid = value.clone(),
-            "buvid3" => auth_profile.buvid3 = value.clone(),
-            "buvid4" => auth_profile.buvid4 = value.clone(),
+            "SESSDATA" => auth_profile.sessdata.clone_from(value),
+            "bili_jct" => auth_profile.bili_jct.clone_from(value),
+            "DedeUserID" => auth_profile.dedeuserid.clone_from(value),
+            "buvid3" => auth_profile.buvid3.clone_from(value),
+            "buvid4" => auth_profile.buvid4.clone_from(value),
             _ => {
                 auth_profile.cookies.insert(key.clone(), value.clone());
             }
@@ -61,15 +63,17 @@ pub async fn run_tv(profile: Option<String>) -> Result<()> {
     tracing::info!("等待 TV 确认 (180s 超时)...");
     let cookies = tv_qr::poll(&qr.qrcode_key).await?;
 
-    let mut auth_profile = AuthProfile::default();
-    auth_profile.name = profile_name.clone();
+    let mut auth_profile = AuthProfile {
+        name: profile_name.clone(),
+        ..Default::default()
+    };
     for (key, value) in &cookies {
         match key.as_str() {
-            "SESSDATA" => auth_profile.sessdata = value.clone(),
-            "bili_jct" => auth_profile.bili_jct = value.clone(),
-            "DedeUserID" => auth_profile.dedeuserid = value.clone(),
-            "buvid3" => auth_profile.buvid3 = value.clone(),
-            "buvid4" => auth_profile.buvid4 = value.clone(),
+            "SESSDATA" => auth_profile.sessdata.clone_from(value),
+            "bili_jct" => auth_profile.bili_jct.clone_from(value),
+            "DedeUserID" => auth_profile.dedeuserid.clone_from(value),
+            "buvid3" => auth_profile.buvid3.clone_from(value),
+            "buvid4" => auth_profile.buvid4.clone_from(value),
             _ => {
                 auth_profile.cookies.insert(key.clone(), value.clone());
             }
@@ -115,21 +119,18 @@ pub fn status() -> Result<()> {
 /// 登出 (删除本地 cookie).
 pub fn logout(profile: Option<String>) -> Result<()> {
     use rbd_auth::keyring_store;
-    match profile {
-        Some(name) => {
-            keyring_store::delete(&name)?;
-            println!("已登出 profile: {name}");
-        }
-        None => {
-            let profiles = keyring_store::list()?;
-            if profiles.is_empty() {
-                println!("没有已保存的 profile, 无需登出");
-            } else {
-                for p in &profiles {
-                    match keyring_store::delete(p) {
-                        Ok(()) => println!("已登出: {p}"),
-                        Err(e) => tracing::warn!("登出 {p} 失败: {e}"),
-                    }
+    if let Some(name) = profile {
+        keyring_store::delete(&name)?;
+        println!("已登出 profile: {name}");
+    } else {
+        let profiles = keyring_store::list()?;
+        if profiles.is_empty() {
+            println!("没有已保存的 profile, 无需登出");
+        } else {
+            for p in &profiles {
+                match keyring_store::delete(p) {
+                    Ok(()) => println!("已登出: {p}"),
+                    Err(e) => tracing::warn!("登出 {p} 失败: {e}"),
                 }
             }
         }

@@ -97,24 +97,14 @@ impl SubtitleFallback {
     }
 
     /// API #1: WBI v2 签名端点.
-    async fn fetch_from_wbi_v2(
-        &self,
-        bvid: &str,
-        cid: u64,
-    ) -> Result<Vec<Subtitle>> {
+    async fn fetch_from_wbi_v2(&self, bvid: &str, cid: u64) -> Result<Vec<Subtitle>> {
         let value = self.api.get_subtitles(bvid, cid).await?;
         crate::fetch::parse_subtitle_list(&value)
     }
 
     /// API #2: 旧版 player v2 端点.
-    async fn fetch_from_player_v2(
-        &self,
-        bvid: &str,
-        cid: u64,
-    ) -> Result<Vec<Subtitle>> {
-        let url = format!(
-            "https://api.bilibili.com/x/player/v2?bvid={bvid}&cid={cid}"
-        );
+    async fn fetch_from_player_v2(&self, bvid: &str, cid: u64) -> Result<Vec<Subtitle>> {
+        let url = format!("https://api.bilibili.com/x/player/v2?bvid={bvid}&cid={cid}");
         let value = self.api.get_json::<serde_json::Value>(&url).await?;
         crate::fetch::parse_subtitle_list(&value)
     }
@@ -139,9 +129,7 @@ impl SubtitleFallback {
     /// URL: `/x/v2/dm/view?type=1&oid={cid}&pid=1`
     /// 响应中的 `data.subtitle` 可包含字幕信息.
     async fn fetch_from_dm_view(&self, cid: u64) -> Result<Vec<Subtitle>> {
-        let url = format!(
-            "https://api.bilibili.com/x/v2/dm/view?type=1&oid={cid}&pid=1"
-        );
+        let url = format!("https://api.bilibili.com/x/v2/dm/view?type=1&oid={cid}&pid=1");
         let value = self.api.get_json::<serde_json::Value>(&url).await?;
         crate::fetch::parse_subtitle_list(&value)
     }
@@ -179,8 +167,7 @@ mod tests {
     fn test_new_api4_view_signature() {
         let api = BilibiliApi::new().unwrap();
         let fallback = SubtitleFallback::new(api);
-        let _: std::pin::Pin<Box<_>> =
-            Box::pin(fallback.fetch_from_view("BV1xx411c7mD"));
+        let _: std::pin::Pin<Box<_>> = Box::pin(fallback.fetch_from_view("BV1xx411c7mD"));
     }
 
     #[test]

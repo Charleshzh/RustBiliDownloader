@@ -15,7 +15,7 @@ use crate::{
 };
 
 /// 下载模式.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum DownloadMode {
     /// 内建并行下载.
     Parallel,
@@ -31,7 +31,7 @@ pub struct DownloadManager {
     audio_tasks: Vec<String>,
     /// 任务状态.
     job_state: Arc<Mutex<JobState>>,
-    /// 取消标志 (AtomicBool, 可跨线程安全访问).
+    /// 取消标志 (`AtomicBool`, 可跨线程安全访问).
     cancelled: Arc<AtomicBool>,
 }
 
@@ -169,15 +169,15 @@ impl DownloadManager {
         self.mark_running();
 
         let video_future = if let Some(video_spec) = video {
-            let mut cb = on_event.clone();
-            Some(self.parallel.download(video_spec, move |event| cb(event)))
+            let cb = on_event.clone();
+            Some(self.parallel.download(video_spec, cb))
         } else {
             None
         };
 
         let audio_future = if let Some(audio_spec) = audio {
-            let mut cb = on_event.clone();
-            Some(self.parallel.download(audio_spec, move |event| cb(event)))
+            let cb = on_event.clone();
+            Some(self.parallel.download(audio_spec, cb))
         } else {
             None
         };
@@ -188,12 +188,8 @@ impl DownloadManager {
                 let (vp, ap) = tokio::join!(vf, af);
                 (Some(vp?), Some(ap?))
             }
-            (Some(vf), None) => {
-                (Some(vf.await?), None)
-            }
-            (None, Some(af)) => {
-                (None, Some(af.await?))
-            }
+            (Some(vf), None) => (Some(vf.await?), None),
+            (None, Some(af)) => (None, Some(af.await?)),
             (None, None) => {
                 self.mark_failed("至少需要视频或音频下载任务之一");
                 return Err(anyhow!("至少需要视频或音频下载任务之一"));
@@ -201,8 +197,11 @@ impl DownloadManager {
         };
 
         if let Some(spec) = subtitle {
-            let mut subtitle_cb = on_event;
-            let _ = self.parallel.download(spec, move |event| subtitle_cb(event)).await?;
+            let subtitle_cb = on_event;
+            let _ = self
+                .parallel
+                .download(spec, subtitle_cb)
+                .await?;
         }
 
         self.mark_done();

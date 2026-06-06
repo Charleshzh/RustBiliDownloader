@@ -35,8 +35,7 @@ pub fn choose_strategy(
         return MuxStrategy::FfmpegTranscode;
     }
     match video_codec {
-        "hevc" => MuxStrategy::FfmpegMerge,
-        "av1" | "dvh1" | "dvhe" => MuxStrategy::FfmpegMerge,
+        "hevc" | "av1" | "dvh1" | "dvhe" => MuxStrategy::FfmpegMerge,
         _ => MuxStrategy::DashCopy,
     }
 }
@@ -73,9 +72,6 @@ mod tests {
     fn test_strategy_name() {
         assert_eq!(MuxStrategy::DashCopy.to_string(), "DashCopy");
         assert_eq!(MuxStrategy::FfmpegMerge.to_string(), "FfmpegMerge");
-        assert_eq!(
-            MuxStrategy::FfmpegTranscode.to_string(),
-            "FfmpegTranscode"
-        );
+        assert_eq!(MuxStrategy::FfmpegTranscode.to_string(), "FfmpegTranscode");
     }
 }

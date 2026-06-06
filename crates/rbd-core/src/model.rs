@@ -86,7 +86,7 @@ pub struct ViewPoint {
     pub end: u32,
 }
 
-/// Track 是 VideoTrack / AudioTrack / SubtitleTrack 的统一外壳.
+/// Track 是 `VideoTrack` / `AudioTrack` / `SubtitleTrack` 的统一外壳.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Track {
@@ -100,6 +100,7 @@ pub enum Track {
 
 /// 视频轨.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct VideoTrack {
     /// 唯一 ID
     pub id: String,

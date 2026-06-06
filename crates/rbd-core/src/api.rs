@@ -53,7 +53,6 @@ impl BilibiliApi {
     }
 
     /// 设置 SESSDATA cookie (返回新实例, 不修改 self).
-    #[must_use]
     pub fn with_cookie(&self, sessdata: &str) -> Result<Self> {
         Ok(Self {
             client: Arc::new(build_client(Some(sessdata))?),
@@ -69,7 +68,9 @@ impl BilibiliApi {
 
     /// 刷新 WBI key.
     pub async fn refresh_wbi_key(&self) -> Result<WbiKey> {
-        let nav: NavResp = self.get_json("https://api.bilibili.com/x/web-interface/nav").await?;
+        let nav: NavResp = self
+            .get_json("https://api.bilibili.com/x/web-interface/nav")
+            .await?;
         let key = WbiKey::from_urls(&nav.data.wbi_img.img_url, &nav.data.wbi_img.sub_url);
         *self.wbi_key.lock() = Some(key.clone());
         Ok(key)
@@ -137,8 +138,10 @@ impl BilibiliApi {
 
     /// 获取番剧单集响应.
     pub async fn get_bangumi_ep(&self, ep_id: u64) -> Result<serde_json::Value> {
-        self.get_json(&format!("https://api.bilibili.com/pgc/view/web/ep?ep_id={ep_id}"))
-            .await
+        self.get_json(&format!(
+            "https://api.bilibili.com/pgc/view/web/ep?ep_id={ep_id}"
+        ))
+        .await
     }
 
     /// 获取空间投稿列表.
@@ -202,7 +205,11 @@ impl BilibiliApi {
         .await
     }
 
-    async fn build_wbi_signed_url(&self, base: &str, params: Vec<(&str, String)>) -> Result<String> {
+    async fn build_wbi_signed_url(
+        &self,
+        base: &str,
+        params: Vec<(&str, String)>,
+    ) -> Result<String> {
         let key = match self.cached_wbi_key() {
             Some(wbi) if !wbi.is_expired() => wbi,
             _ => self.refresh_wbi_key().await?,
@@ -224,11 +231,12 @@ fn build_headers(sessdata: Option<&str>) -> Result<HeaderMap> {
     let mut headers = HeaderMap::new();
     headers.insert(
         USER_AGENT,
-        HeaderValue::from_static(
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        ),
+        HeaderValue::from_static("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"),
     );
-    headers.insert(REFERER, HeaderValue::from_static("https://www.bilibili.com"));
+    headers.insert(
+        REFERER,
+        HeaderValue::from_static("https://www.bilibili.com"),
+    );
     if let Some(sessdata) = sessdata {
         let value = format!("SESSDATA={sessdata}");
         headers.insert(COOKIE, HeaderValue::from_str(&value)?);
@@ -271,8 +279,14 @@ mod tests {
         }"#;
 
         let parsed: NavResp = serde_json::from_str(sample).unwrap();
-        assert_eq!(parsed.data.wbi_img.img_url, "https://i0.hdslb.com/bfs/wbi/abc123.png");
-        assert_eq!(parsed.data.wbi_img.sub_url, "https://i0.hdslb.com/bfs/wbi/def456.png");
+        assert_eq!(
+            parsed.data.wbi_img.img_url,
+            "https://i0.hdslb.com/bfs/wbi/abc123.png"
+        );
+        assert_eq!(
+            parsed.data.wbi_img.sub_url,
+            "https://i0.hdslb.com/bfs/wbi/def456.png"
+        );
     }
 
     #[tokio::test]
@@ -293,7 +307,10 @@ mod tests {
         );
         let url = build_wbi_signed_url(
             "https://api.bilibili.com/x/player/wbi/v2",
-            vec![("bvid", "BV1xx411c7mD".to_string()), ("cid", "123".to_string())],
+            vec![
+                ("bvid", "BV1xx411c7mD".to_string()),
+                ("cid", "123".to_string()),
+            ],
             &wbi,
         );
 

@@ -34,11 +34,7 @@ pub async fn fetch_subtitle_content(url: &str) -> Result<(SubtitleFormat, String
 /// 从 WBI v2 API 获取字幕列表.
 ///
 /// 返回字幕信息数组 (不含内容).
-pub async fn fetch_subtitle_list(
-    api: &BilibiliApi,
-    bvid: &str,
-    cid: u64,
-) -> Result<Vec<Subtitle>> {
+pub async fn fetch_subtitle_list(api: &BilibiliApi, bvid: &str, cid: u64) -> Result<Vec<Subtitle>> {
     let value = api.get_subtitles(bvid, cid).await?;
     parse_subtitle_list(&value)
 }
@@ -51,9 +47,7 @@ pub fn parse_subtitle_list(value: &serde_json::Value) -> Result<Vec<Subtitle>> {
 
     let mut result = Vec::new();
     for item in subtitles {
-        let raw_url = item["subtitle_url"]
-            .as_str()
-            .unwrap_or_default();
+        let raw_url = item["subtitle_url"].as_str().unwrap_or_default();
         let url = if raw_url.starts_with("//") {
             format!("https:{raw_url}")
         } else {
@@ -68,14 +62,8 @@ pub fn parse_subtitle_list(value: &serde_json::Value) -> Result<Vec<Subtitle>> {
                 .map(|id| id.to_string())
                 .or_else(|| item["id_str"].as_str().map(ToString::to_string))
                 .unwrap_or_else(|| "unknown".to_string()),
-            lang: item["lan"]
-                .as_str()
-                .unwrap_or("unknown")
-                .to_string(),
-            lang_name: item["lan_doc"]
-                .as_str()
-                .unwrap_or("Unknown")
-                .to_string(),
+            lang: item["lan"].as_str().unwrap_or("unknown").to_string(),
+            lang_name: item["lan_doc"].as_str().unwrap_or("Unknown").to_string(),
             format,
             url,
             content: String::new(),

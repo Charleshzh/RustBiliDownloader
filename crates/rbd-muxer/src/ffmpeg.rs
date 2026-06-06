@@ -1,10 +1,10 @@
 //! ffmpeg wrapper
 
+use anyhow::Result;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use anyhow::Result;
 
-/// FfmpegMuxer
+/// `FfmpegMuxer`
 #[derive(Debug, Clone)]
 pub struct FfmpegMuxer {
     ffmpeg_path: PathBuf,
@@ -19,13 +19,13 @@ impl FfmpegMuxer {
         })
     }
 
-    /// with_path
+    /// `with_path`
     #[must_use]
     pub fn with_path(path: PathBuf) -> Self {
         Self { ffmpeg_path: path }
     }
 
-    /// merge_copy
+    /// `merge_copy`
     pub fn merge_copy(&self, video: &Path, audio: Option<&Path>, output: &Path) -> Result<()> {
         let mut cmd = Command::new(&self.ffmpeg_path);
         cmd.arg("-i").arg(video);
@@ -38,7 +38,10 @@ impl FfmpegMuxer {
             .status()
             .map_err(|e| anyhow::anyhow!("ffmpeg 启动失败: {e}"))?;
         if !status.success() {
-            anyhow::bail!("ffmpeg 合流失败 (exit code {})", status.code().unwrap_or(-1));
+            anyhow::bail!(
+                "ffmpeg 合流失败 (exit code {})",
+                status.code().unwrap_or(-1)
+            );
         }
         Ok(())
     }

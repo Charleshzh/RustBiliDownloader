@@ -34,7 +34,7 @@ pub fn opacity_to_ass_alpha(opacity: f32) -> u8 {
 /// `outline = max(fontsize / 25, 1.0)`
 #[must_use]
 pub fn outline_width(font_size: u8) -> f32 {
-    (font_size as f32 / 25.0).max(1.0)
+    (f32::from(font_size) / 25.0).max(1.0)
 }
 
 /// 格式化完整的 ASS 颜色 + 透明度前缀.

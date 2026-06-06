@@ -2,6 +2,8 @@
 //!
 //! **算法来源**: BBDown/SubUtil.cs `JsonSub2Srt` + Yutto `ass.py`.
 
+use std::fmt::Write;
+
 use anyhow::{anyhow, Result};
 
 use crate::model::SubtitleBody;
@@ -33,9 +35,9 @@ pub fn json_to_srt(json_content: &str) -> Result<String> {
         let end = format_timestamp(entry.to);
         let content = &entry.content;
 
-        srt.push_str(&format!("{seq}\r\n"));
-        srt.push_str(&format!("{start} --> {end}\r\n"));
-        srt.push_str(&format!("{content}\r\n\r\n"));
+        let _ = write!(srt, "{seq}\r\n");
+        let _ = write!(srt, "{start} --> {end}\r\n");
+        let _ = write!(srt, "{content}\r\n\r\n");
     }
 
     Ok(srt)
@@ -57,30 +59,22 @@ pub fn srt_to_ass(srt_content: &str) -> Result<String> {
     ass.push_str("PlayResY: 1080\r\n");
     ass.push_str("\r\n");
     ass.push_str("[V4+ Styles]\r\n");
-    ass.push_str("Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, "
-    );
-    ass.push_str(
-        "OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, "
-    );
-    ass.push_str("Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, "
-    );
+    ass.push_str("Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, ");
+    ass.push_str("OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, ");
+    ass.push_str("Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, ");
     ass.push_str("MarginV, Encoding\r\n");
     ass.push_str(
         "Style: Default,Microsoft YaHei,42,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,0,2,30,30,15,1\r\n",
     );
     ass.push_str("\r\n");
     ass.push_str("[Events]\r\n");
-    ass.push_str("Format: Layer, Start, End, Style, Name, MarginL, MarginR, "
-    );
+    ass.push_str("Format: Layer, Start, End, Style, Name, MarginL, MarginR, ");
     ass.push_str("MarginV, Effect, Text\r\n");
 
     for event in events {
         let start = format_ass_timestamp(event.start);
         let end = format_ass_timestamp(event.end);
-        ass.push_str(&format!(
-            "Dialogue: 0,{start},{end},Default,,0,0,0,,{text}\r\n",
-            text = &event.text
-        ));
+        let _ = write!(ass, "Dialogue: 0,{start},{end},Default,,0,0,0,,{}\r\n", event.text);
     }
 
     Ok(ass)
@@ -90,16 +84,16 @@ pub fn srt_to_ass(srt_content: &str) -> Result<String> {
 ///
 /// 剥离 ASS 头部和样式, 仅提取 Dialogue 行.
 pub fn ass_to_srt(ass_content: &str) -> Result<String> {
-    let events = parse_ass_events(ass_content)?;
+    let events = parse_ass_events(ass_content);
 
     let mut srt = String::new();
     for (i, event) in events.iter().enumerate() {
         let seq = i + 1;
         let start = format_timestamp(event.start);
         let end = format_timestamp(event.end);
-        srt.push_str(&format!("{seq}\r\n"));
-        srt.push_str(&format!("{start} --> {end}\r\n"));
-        srt.push_str(&format!("{}\r\n\r\n", event.text));
+        let _ = write!(srt, "{seq}\r\n");
+        let _ = write!(srt, "{start} --> {end}\r\n");
+        let _ = write!(srt, "{}\r\n\r\n", event.text);
     }
 
     Ok(srt)
@@ -142,9 +136,9 @@ fn parse_srt_events(srt: &str) -> Result<Vec<SubEvent>> {
     let mut events = Vec::new();
     let mut lines = srt.lines().peekable();
 
-    while let Some(_seq_line) = lines.next() {
+    while let Some(seq_line) = lines.next() {
         // skip empty lines
-        if _seq_line.trim().is_empty() {
+        if seq_line.trim().is_empty() {
             continue;
         }
 
@@ -163,7 +157,7 @@ fn parse_srt_events(srt: &str) -> Result<Vec<SubEvent>> {
         let end = parse_srt_time(parts[1].trim())?;
 
         let mut text = String::new();
-        while let Some(content_line) = lines.next() {
+        for content_line in lines.by_ref() {
             let trimmed = content_line.trim();
             if trimmed.is_empty() {
                 break;
@@ -201,7 +195,7 @@ fn parse_srt_time(s: &str) -> Result<f64> {
 }
 
 /// 解析 ASS 文件提取 Dialogue 事件.
-fn parse_ass_events(ass: &str) -> Result<Vec<SubEvent>> {
+fn parse_ass_events(ass: &str) -> Vec<SubEvent> {
     let mut events = Vec::new();
     let mut in_events = false;
 
@@ -224,7 +218,8 @@ fn parse_ass_events(ass: &str) -> Result<Vec<SubEvent>> {
         }
     }
 
-    Ok(events)
+    // 函数 parse_ass_events 现在直接返回 Vec<SubEvent>
+    events
 }
 
 /// 解析单行 ASS Dialogue.

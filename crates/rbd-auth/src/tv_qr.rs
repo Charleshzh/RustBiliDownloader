@@ -16,7 +16,7 @@ use crate::web_qr::QrGenerateResponse;
 
 /// 生成 TV 登录二维码.
 ///
-/// 返回 auth_code 供用户在网页上输入.
+/// 返回 `auth_code` 供用户在网页上输入.
 pub async fn generate() -> Result<QrGenerateResponse> {
     let api = BilibiliApi::new()?;
     let value: serde_json::Value = api
@@ -24,14 +24,8 @@ pub async fn generate() -> Result<QrGenerateResponse> {
         .await?;
 
     let data = &value["data"];
-    let url = data["url"]
-        .as_str()
-        .unwrap_or_default()
-        .to_string();
-    let auth_code = data["auth_code"]
-        .as_str()
-        .unwrap_or_default()
-        .to_string();
+    let url = data["url"].as_str().unwrap_or_default().to_string();
+    let auth_code = data["auth_code"].as_str().unwrap_or_default().to_string();
 
     if auth_code.is_empty() {
         return Err(anyhow!(
@@ -131,7 +125,7 @@ pub async fn poll(auth_code: &str) -> Result<HashMap<String, String>> {
     }
 }
 
-/// 用户在网页输入 auth_code 后确认登录.
+/// 用户在网页输入 `auth_code` 后确认登录.
 ///
 /// 此函数供用户在网页端输入 code 后调用, 返回登录 cookies.
 pub async fn confirm(auth_code: &str, code: &str) -> Result<HashMap<String, String>> {
@@ -149,9 +143,7 @@ pub async fn confirm(auth_code: &str, code: &str) -> Result<HashMap<String, Stri
         .json()
         .await?;
 
-    let code_val: i32 = value["code"]
-        .as_i64()
-        .unwrap_or(-1) as i32;
+    let code_val: i32 = value["code"].as_i64().unwrap_or(-1) as i32;
     if code_val != 0 {
         return Err(anyhow!(
             "TV 登录确认失败: {}",

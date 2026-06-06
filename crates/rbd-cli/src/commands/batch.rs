@@ -7,12 +7,12 @@ use std::path::PathBuf;
 
 /// 执行批量下载命令.
 pub async fn run(file: PathBuf) -> Result<()> {
-    let content = fs::read_to_string(&file)
-        .with_context(|| format!("读取文件失败: {}", file.display()))?;
+    let content =
+        fs::read_to_string(&file).with_context(|| format!("读取文件失败: {}", file.display()))?;
 
     let urls: Vec<&str> = content
         .lines()
-        .map(|l| l.trim())
+        .map(str::trim)
         .filter(|l| !l.is_empty() && !l.starts_with('#'))
         .collect();
 

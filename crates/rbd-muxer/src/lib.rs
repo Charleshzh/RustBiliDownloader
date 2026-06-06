@@ -13,20 +13,20 @@
 
 #![warn(missing_docs)]
 
+/// ffmpeg 命令构造.
+pub mod command;
 /// DASH m4s 容器混流 (纯 Rust, 不调 ffmpeg).
 pub mod dash_copy;
-/// ffmpeg-sidecar 命令包装.
-pub mod ffmpeg;
 /// 媒体信息探测 (时长/编码/分辨率).
 pub mod detector;
+/// ffmpeg-sidecar 命令包装.
+pub mod ffmpeg;
 /// MP4 metadata 写入 (moov box).
 pub mod metadata;
 /// 混流策略选择 (DASH-copy / ffmpeg-merge / ffmpeg-transcode).
 pub mod strategy;
-/// ffmpeg 命令构造.
-pub mod command;
 
-pub use strategy::{MuxStrategy, choose_strategy};
-pub use ffmpeg::FfmpegMuxer;
 pub use dash_copy::DashCopyMuxer;
+pub use ffmpeg::FfmpegMuxer;
 pub use metadata::write_metadata;
+pub use strategy::{choose_strategy, MuxStrategy};

@@ -20,7 +20,6 @@
 //!   - `BV17x411w7KC` / `av170001` (裸 ID)
 //!   - `b23.tv/xxx` (短链 - 需 resolve)
 
-use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -45,7 +44,7 @@ pub struct BvId(pub String);
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct CId(pub u64);
 
-/// 番剧单集 ID (ss + ep_id).
+/// 番剧单集 ID (ss + `ep_id`).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct EpisodeId(pub u64);
 
@@ -129,11 +128,11 @@ pub enum NormalizedId {
         /// season id
         season_id: u64,
     },
-    /// 合集 (UP 主创建的合集, season_id)
+    /// 合集 (UP 主创建的合集, `season_id`)
     Collection {
         /// mid
         mid: u64,
-        /// season_id (collection sid)
+        /// `season_id` (collection sid)
         sid: u64,
     },
     /// 短链 (需 b23.tv → 完整 URL 重定向后再次 parse)
@@ -159,7 +158,8 @@ impl fmt::Display for NormalizedId {
                 ..
             } => write!(f, "番剧: ss{ss} ep{ep}"),
             NormalizedId::Bangumi {
-                season_id: Some(ss), ..
+                season_id: Some(ss),
+                ..
             } => write!(f, "番剧: ss{ss}"),
             NormalizedId::Bangumi {
                 ep_id: Some(ep), ..
@@ -226,7 +226,7 @@ impl BilibiliId for BvId {
 }
 
 impl BilibiliId for AvId {
-    fn raw(&self) -> &str {
+    fn raw(&self) -> &'static str {
         // 不可返回 &str, 退化
         ""
     }
@@ -235,59 +235,58 @@ impl BilibiliId for AvId {
 // === URL 解析 ===
 
 // 静态正则: 一次性编译, 全部用 once_cell 缓存
-static RE_VIDEO_URL: Lazy<Regex> = Lazy::new(|| {
+static RE_VIDEO_URL: std::sync::LazyLock<Regex> = std::sync::LazyLock::new(|| {
     // https://www.bilibili.com/video/BV1xx411c7mD 或 av170001
     Regex::new(r"bilibili\.com/video/(?P<id>(BV[1-9A-HJ-NP-Za-km-z]{10}|av\d+))").unwrap()
 });
-static RE_BANGUMI_SS: Lazy<Regex> = Lazy::new(|| {
+static RE_BANGUMI_SS: std::sync::LazyLock<Regex> = std::sync::LazyLock::new(|| {
     // https://www.bilibili.com/bangumi/play/ss123
     Regex::new(r"bilibili\.com/bangumi/play/ss(?P<ss>\d+)").unwrap()
 });
-static RE_BANGUMI_EP: Lazy<Regex> = Lazy::new(|| {
+static RE_BANGUMI_EP: std::sync::LazyLock<Regex> = std::sync::LazyLock::new(|| {
     // https://www.bilibili.com/bangumi/play/ep123
     Regex::new(r"bilibili\.com/bangumi/play/ep(?P<ep>\d+)").unwrap()
 });
-static RE_BANGUMI_MD: Lazy<Regex> = Lazy::new(|| {
+static RE_BANGUMI_MD: std::sync::LazyLock<Regex> = std::sync::LazyLock::new(|| {
     // https://www.bilibili.com/bangumi/media/md123
     Regex::new(r"bilibili\.com/bangumi/media/md(?P<md>\d+)").unwrap()
 });
-static RE_CHEESE_SS: Lazy<Regex> = Lazy::new(|| {
+static RE_CHEESE_SS: std::sync::LazyLock<Regex> = std::sync::LazyLock::new(|| {
     // https://www.bilibili.com/cheese/play/ss123
     Regex::new(r"bilibili\.com/cheese/play/ss(?P<ss>\d+)").unwrap()
 });
-static RE_CHEESE_EP: Lazy<Regex> = Lazy::new(|| {
+static RE_CHEESE_EP: std::sync::LazyLock<Regex> = std::sync::LazyLock::new(|| {
     // https://www.bilibili.com/cheese/play/ep123
     Regex::new(r"bilibili\.com/cheese/play/ep(?P<ep>\d+)").unwrap()
 });
-static RE_FAV: Lazy<Regex> = Lazy::new(|| {
+static RE_FAV: std::sync::LazyLock<Regex> = std::sync::LazyLock::new(|| {
     // https://space.bilibili.com/123/favlist?fid=456
     Regex::new(r"space\.bilibili\.com/(?P<mid>\d+)/favlist\?.*?fid=(?P<fid>\d+)").unwrap()
 });
-static RE_COLLECTION: Lazy<Regex> = Lazy::new(|| {
+static RE_COLLECTION: std::sync::LazyLock<Regex> = std::sync::LazyLock::new(|| {
     // https://space.bilibili.com/123/collectiondetail?sid=456
     Regex::new(r"space\.bilibili\.com/(?P<mid>\d+)/collectiondetail\?.*?sid=(?P<sid>\d+)").unwrap()
 });
-static RE_SPACE_VIDEO: Lazy<Regex> = Lazy::new(|| {
+static RE_SPACE_VIDEO: std::sync::LazyLock<Regex> = std::sync::LazyLock::new(|| {
     // https://space.bilibili.com/123/video
     Regex::new(r"space\.bilibili\.com/(?P<mid>\d+)(/|$|\?|#)").unwrap()
 });
-static RE_MEDIA_LIST: Lazy<Regex> = Lazy::new(|| {
+static RE_MEDIA_LIST: std::sync::LazyLock<Regex> = std::sync::LazyLock::new(|| {
     // https://www.bilibili.com/list/ml12345
     Regex::new(r"bilibili\.com/list/ml(?P<id>\d+)").unwrap()
 });
-static RE_SERIES: Lazy<Regex> = Lazy::new(|| {
+static RE_SERIES: std::sync::LazyLock<Regex> = std::sync::LazyLock::new(|| {
     // https://www.bilibili.com/series/bsc12345
     Regex::new(r"bilibili\.com/series/(?P<sid>\d+|bsc\d+)").unwrap()
 });
-static RE_SHORT: Lazy<Regex> = Lazy::new(|| {
+static RE_SHORT: std::sync::LazyLock<Regex> = std::sync::LazyLock::new(|| {
     // https://b23.tv/xxx 或 https://bili2233.cn/xxx
     Regex::new(r"(b23\.tv|bili2233\.cn)/(?P<code>[A-Za-z0-9]+)").unwrap()
 });
-static RE_RAW_BV: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"^BV[1-9A-HJ-NP-Za-km-z]{10}$").unwrap());
-static RE_RAW_AV: Lazy<Regex> = Lazy::new(|| Regex::new(r"^av\d+$").unwrap());
+static RE_RAW_BV: std::sync::LazyLock<Regex> = std::sync::LazyLock::new(|| Regex::new(r"^BV[1-9A-HJ-NP-Za-km-z]{10}$").unwrap());
+static RE_RAW_AV: std::sync::LazyLock<Regex> = std::sync::LazyLock::new(|| Regex::new(r"^av\d+$").unwrap());
 
-/// 解析 B 站 URL → NormalizedId. 解析失败返回 anyhow::Error.
+/// 解析 B 站 URL → `NormalizedId`. 解析失败返回 `anyhow::Error`.
 pub fn parse_url(input: &str) -> anyhow::Result<NormalizedId> {
     let s = input.trim();
     if s.is_empty() {
@@ -401,7 +400,10 @@ pub fn parse_url(input: &str) -> anyhow::Result<NormalizedId> {
 
     // 兜底: 尝试用 url::Url 解析, 失败才报错
     if let Ok(u) = Url::parse(s) {
-        anyhow::bail!("无法识别 B 站 URL: {s} (host={})", u.host_str().unwrap_or(""));
+        anyhow::bail!(
+            "无法识别 B 站 URL: {s} (host={})",
+            u.host_str().unwrap_or("")
+        );
     }
     anyhow::bail!("无法识别 B 站 URL: {s}");
 }
@@ -411,7 +413,7 @@ fn extract_page_index(s: &str) -> u32 {
     // 找 "p=" 后跟数字
     if let Some(pos) = s.find("?p=").or_else(|| s.find("&p=")) {
         let after = &s[pos + 3..];
-        let num: String = after.chars().take_while(|c| c.is_ascii_digit()).collect();
+        let num: String = after.chars().take_while(char::is_ascii_digit).collect();
         if let Ok(n) = num.parse::<u32>() {
             return n;
         }
@@ -420,7 +422,7 @@ fn extract_page_index(s: &str) -> u32 {
     if let Some(pos) = s.find("?p=ep") {
         let after = &s[pos + 5..];
         // 跳过数字找 "."
-        let num: String = after.chars().take_while(|c| c.is_ascii_digit()).collect();
+        let num: String = after.chars().take_while(char::is_ascii_digit).collect();
         if let Ok(n) = num.parse::<u32>() {
             return n;
         }

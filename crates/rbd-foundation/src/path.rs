@@ -61,10 +61,7 @@ pub fn url_to_filename(url: &str) -> Option<String> {
 /// `base` = 下载根目录, `relative` = 相对路径 (如 `<title>/<p_title>.mp4`).
 #[must_use]
 pub fn join_output(base: &Path, relative: &str) -> PathBuf {
-    let sanitized: PathBuf = relative
-        .split('/')
-        .map(sanitize_filename)
-        .collect();
+    let sanitized: PathBuf = relative.split('/').map(sanitize_filename).collect();
     base.join(sanitized)
 }
 
@@ -104,8 +101,14 @@ mod tests {
 
     #[test]
     fn test_url_to_filename() {
-        assert_eq!(url_to_filename("https://x.com/a/b.flv"), Some("b.flv".into()));
-        assert_eq!(url_to_filename("https://x.com/a/b.flv?token=1"), Some("b.flv".into()));
+        assert_eq!(
+            url_to_filename("https://x.com/a/b.flv"),
+            Some("b.flv".into())
+        );
+        assert_eq!(
+            url_to_filename("https://x.com/a/b.flv?token=1"),
+            Some("b.flv".into())
+        );
     }
 
     #[test]

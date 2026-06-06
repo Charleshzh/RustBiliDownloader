@@ -17,7 +17,7 @@ pub enum ApiMode {
 
 impl ApiMode {
     /// 从字符串解析模式.
-    pub fn from_str(s: &str) -> Self {
+    pub fn parse(s: &str) -> Self {
         match s.to_lowercase().as_str() {
             "web" => Self::Web,
             "app" => Self::App,
@@ -58,19 +58,19 @@ mod tests {
             ApiMode::Intl,
             ApiMode::Auto,
         ] {
-            assert_eq!(ApiMode::from_str(mode.as_str()), mode);
+            assert_eq!(ApiMode::parse(mode.as_str()), mode);
         }
     }
 
     #[test]
     fn test_api_mode_case_insensitive() {
-        assert_eq!(ApiMode::from_str("WEB"), ApiMode::Web);
-        assert_eq!(ApiMode::from_str("App"), ApiMode::App);
+        assert_eq!(ApiMode::parse("WEB"), ApiMode::Web);
+        assert_eq!(ApiMode::parse("App"), ApiMode::App);
     }
 
     #[test]
     fn test_api_mode_unknown_defaults_auto() {
-        assert_eq!(ApiMode::from_str("xyz"), ApiMode::Auto);
-        assert_eq!(ApiMode::from_str(""), ApiMode::Auto);
+        assert_eq!(ApiMode::parse("xyz"), ApiMode::Auto);
+        assert_eq!(ApiMode::parse(""), ApiMode::Auto);
     }
 }

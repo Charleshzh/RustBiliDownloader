@@ -1,7 +1,9 @@
 //! playurl 统一客户端.
 
 use anyhow::Result;
-use rbd_core::{parse_playurl, AudioTrack, BilibiliApi, PlayUrlResponse, SubtitleTrack, VideoTrack};
+use rbd_core::{
+    parse_playurl, AudioTrack, BilibiliApi, PlayUrlResponse, SubtitleTrack, VideoTrack,
+};
 
 /// playurl 统一客户端.
 pub struct PlayUrlClient {

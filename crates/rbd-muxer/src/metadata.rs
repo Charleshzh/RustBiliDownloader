@@ -1,9 +1,9 @@
 //! metadata
 
-use std::path::Path;
 use anyhow::Result;
+use std::path::Path;
 
-/// write_metadata
+/// `write_metadata`
 pub async fn write_metadata(
     _output: &Path,
     _title: &str,
