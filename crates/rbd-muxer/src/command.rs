@@ -1,21 +1,21 @@
-//! ffmpeg command builder.
+//! ffmpeg 命令构造器 (流式 API).
 
 use std::path::Path;
 
-/// Fluent builder for ffmpeg commands (alternative to raw arg lists).
+/// ffmpeg 命令的流式构造器 (替代裸参数列表).
 #[derive(Debug, Clone, Default)]
 pub struct FfmpegCommand {
     args: Vec<String>,
 }
 
 impl FfmpegCommand {
-    /// Creates a new ffmpeg command builder.
+    /// 创建新的 ffmpeg 命令构造器.
     #[must_use]
     pub fn new() -> Self {
         Self { args: Vec::new() }
     }
 
-    /// Adds an input file.
+    /// 添加输入文件.
     #[must_use]
     pub fn input(mut self, path: &Path) -> Self {
         self.args.push("-i".to_string());
@@ -23,14 +23,14 @@ impl FfmpegCommand {
         self
     }
 
-    /// Adds an output file.
+    /// 添加输出文件.
     #[must_use]
     pub fn output(mut self, path: &Path) -> Self {
         self.args.push(path.to_string_lossy().to_string());
         self
     }
 
-    /// -c copy
+    /// 流复制模式 (-c copy).
     #[must_use]
     pub fn codec_copy(mut self) -> Self {
         self.args.push("-c".to_string());
@@ -38,7 +38,7 @@ impl FfmpegCommand {
         self
     }
 
-    /// Ƶ
+    /// 设置视频编码器.
     #[must_use]
     pub fn vcodec(mut self, codec: &str) -> Self {
         self.args.push("-c:v".to_string());
@@ -46,7 +46,7 @@ impl FfmpegCommand {
         self
     }
 
-    /// Ƶ
+    /// 设置视频编码器.
     #[must_use]
     pub fn acodec(mut self, codec: &str) -> Self {
         self.args.push("-c:a".to_string());
@@ -54,7 +54,7 @@ impl FfmpegCommand {
         self
     }
 
-    /// title
+    /// 设置标题元数据.
     #[must_use]
     pub fn metadata_title(mut self, t: &str) -> Self {
         self.args.push("-metadata".to_string());
@@ -62,7 +62,7 @@ impl FfmpegCommand {
         self
     }
 
-    /// artist
+    /// 设置艺术家元数据.
     #[must_use]
     pub fn metadata_artist(mut self, a: &str) -> Self {
         self.args.push("-metadata".to_string());
@@ -70,7 +70,7 @@ impl FfmpegCommand {
         self
     }
 
-    /// cover
+    /// 添加封面图片.
     #[must_use]
     pub fn cover(mut self, path: &Path) -> Self {
         self.args.push("-i".to_string());
@@ -86,7 +86,7 @@ impl FfmpegCommand {
         self
     }
 
-    /// Adds extra arguments.
+    /// 添加额外参数.
     #[must_use]
     pub fn extra(mut self, args: &[&str]) -> Self {
         for &arg in args {
@@ -95,7 +95,7 @@ impl FfmpegCommand {
         self
     }
 
-    /// Builds the final argument list.
+    /// 构建最终参数列表.
     #[must_use]
     pub fn build(self) -> Vec<String> {
         self.args

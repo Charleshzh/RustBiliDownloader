@@ -47,7 +47,6 @@ prost = { workspace = true }
 prost-types = { workspace = true }
 
 # 错误
-thiserror = { workspace = true }
 anyhow = { workspace = true }
 
 # 日志

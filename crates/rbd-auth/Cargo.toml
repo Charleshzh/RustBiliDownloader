@@ -29,7 +29,6 @@ toml = { workspace = true }
 toml_edit = { workspace = true }
 
 # 错误
-thiserror = { workspace = true }
 anyhow = { workspace = true }
 
 # 日志

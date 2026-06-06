@@ -1,8 +1,9 @@
 //! 并行下载器.
 
 use std::io::{Seek, SeekFrom, Write};
-use std::sync::Mutex as StdMutex;
 use std::{path::PathBuf, sync::Arc, time::Instant};
+
+use parking_lot::Mutex;
 
 use anyhow::{anyhow, Result};
 use reqwest::header::HeaderMap;
@@ -112,7 +113,7 @@ impl ParallelDownloader {
             .truncate(true)
             .open(&spec.dest)?;
         file.set_len(total)?;
-        let file = Arc::new(StdMutex::new(file));
+        let file = Arc::new(Mutex::new(file));
 
         let started_at = Instant::now();
         let downloaded = Arc::new(std::sync::atomic::AtomicU64::new(0));
@@ -142,7 +143,7 @@ impl ParallelDownloader {
 
                 // 流式写入: 直接在目标偏移量写入
                 {
-                    let mut f = file.lock().unwrap();
+                    let mut f = file.lock();
                     f.seek(SeekFrom::Start(start))?;
                     f.write_all(&response.data)?;
                 }

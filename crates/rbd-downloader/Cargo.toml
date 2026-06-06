@@ -31,7 +31,6 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 # 错误
-thiserror = { workspace = true }
 anyhow = { workspace = true }
 
 # 日志
@@ -42,6 +41,9 @@ indicatif = { workspace = true }
 
 # 并行
 rayon = { workspace = true }
+
+# 并发安全
+parking_lot = "=0.12.3"
 
 # 文件
 bytes = { workspace = true }

@@ -1,4 +1,4 @@
-//! ffmpeg wrapper
+//! ffmpeg 包装器.
 
 use anyhow::Result;
 use std::path::{Path, PathBuf};
@@ -11,7 +11,7 @@ pub struct FfmpegMuxer {
 }
 
 impl FfmpegMuxer {
-    /// new
+    /// 创建 ffmpeg 混流器 (自动查找 ffmpeg 路径).
     pub fn new() -> Result<Self> {
         // Just a dummy locator
         Ok(Self {
@@ -19,13 +19,13 @@ impl FfmpegMuxer {
         })
     }
 
-    /// `with_path`
+    /// 指定 ffmpeg 二进制路径.
     #[must_use]
     pub fn with_path(path: PathBuf) -> Self {
         Self { ffmpeg_path: path }
     }
 
-    /// `merge_copy`
+    /// 复制流合并 (不重新编码, 最快).
     pub fn merge_copy(&self, video: &Path, audio: Option<&Path>, output: &Path) -> Result<()> {
         let mut cmd = Command::new(&self.ffmpeg_path);
         cmd.arg("-i").arg(video);
@@ -46,7 +46,7 @@ impl FfmpegMuxer {
         Ok(())
     }
 
-    /// transcode
+    /// 完整转码 (需要重新编码, 兜底方案).
     pub fn transcode(
         &self,
         video: &Path,

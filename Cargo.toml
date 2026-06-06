@@ -64,7 +64,6 @@ console = "=0.15.10"
 
 # 错误处理
 anyhow = "1.0"
-thiserror = "=1.0.69"
 
 # 日志
 tracing = "0.1"

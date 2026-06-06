@@ -2,9 +2,10 @@
 
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use anyhow::{anyhow, Result};
+use parking_lot::Mutex;
 
 use crate::{
     aria2c::Aria2cClient,
@@ -57,7 +58,7 @@ impl DownloadManager {
     /// 获取当前任务状态.
     #[must_use]
     pub fn job_state(&self) -> JobState {
-        self.job_state.lock().unwrap().clone()
+        self.job_state.lock().clone()
     }
 
     /// 获取取消标志 (可用于传递给下载任务以支持协作式取消).
@@ -73,7 +74,7 @@ impl DownloadManager {
     #[must_use]
     pub fn cancel(&self) -> JobState {
         self.cancelled.store(true, Ordering::SeqCst);
-        let mut state = self.job_state.lock().unwrap();
+        let mut state = self.job_state.lock();
         match state.transition(&JobState::Cancelled) {
             Ok(new_state) => {
                 *state = new_state.clone();
@@ -89,7 +90,7 @@ impl DownloadManager {
     /// 返回转换后的状态 (Paused 或 current state).
     #[must_use]
     pub fn pause(&self) -> JobState {
-        let mut state = self.job_state.lock().unwrap();
+        let mut state = self.job_state.lock();
         match state.transition(&JobState::Paused) {
             Ok(new_state) => {
                 *state = new_state.clone();
@@ -106,7 +107,7 @@ impl DownloadManager {
     #[must_use]
     pub fn resume(&self) -> JobState {
         self.cancelled.store(false, Ordering::SeqCst);
-        let mut state = self.job_state.lock().unwrap();
+        let mut state = self.job_state.lock();
         match state.transition(&JobState::Running) {
             Ok(new_state) => {
                 *state = new_state.clone();
@@ -119,7 +120,7 @@ impl DownloadManager {
     /// 标记任务为运行中.
     #[must_use]
     pub fn mark_running(&self) -> JobState {
-        let mut state = self.job_state.lock().unwrap();
+        let mut state = self.job_state.lock();
         match state.transition(&JobState::Running) {
             Ok(new_state) => {
                 *state = new_state.clone();
@@ -132,7 +133,7 @@ impl DownloadManager {
     /// 标记任务为完成.
     #[must_use]
     pub fn mark_done(&self) -> JobState {
-        let mut state = self.job_state.lock().unwrap();
+        let mut state = self.job_state.lock();
         match state.transition(&JobState::Done) {
             Ok(new_state) => {
                 *state = new_state.clone();
@@ -144,7 +145,7 @@ impl DownloadManager {
 
     /// 标记任务失败.
     pub fn mark_failed(&self, reason: impl Into<String>) -> JobState {
-        let mut state = self.job_state.lock().unwrap();
+        let mut state = self.job_state.lock();
         match state.transition(&JobState::Failed(reason.into())) {
             Ok(new_state) => {
                 *state = new_state.clone();

@@ -1,15 +1,15 @@
-//! ѡ.
+//! 混流策略选择.
 
 use std::fmt;
 
-/// Mux .
+/// 混流策略枚举.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MuxStrategy {
-    /// Pure Rust, no ffmpeg, fastest.
+    /// 纯 Rust DASH 复制, 不依赖 ffmpeg, 最快.
     DashCopy,
-    /// ffmpeg -c copy (compatible container remux).
+    /// ffmpeg 流复制 (-c copy, 兼容容器重封装).
     FfmpegMerge,
-    /// ffmpeg full transcode (last resort).
+    /// ffmpeg 完整转码 (兜底方案).
     FfmpegTranscode,
 }
 
@@ -23,7 +23,7 @@ impl fmt::Display for MuxStrategy {
     }
 }
 
-/// ѡ Mux .
+/// 根据编码类型和特性选择混流策略.
 #[must_use]
 pub fn choose_strategy(
     video_codec: &str,
