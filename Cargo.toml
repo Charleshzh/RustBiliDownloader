@@ -34,7 +34,7 @@ async-trait = "0.1"
 tokio-util = { version = "0.7", features = ["io", "rt"] }
 
 # HTTP / 网络 (rust 1.83 兼容)
-reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls", "gzip", "brotli", "http2"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls", "gzip", "brotli", "http2", "cookies"] }
 hyper = { version = "1.5", features = ["full"] }
 hyper-util = "0.1"
 http = "1.1"

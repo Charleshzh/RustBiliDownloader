@@ -18,6 +18,8 @@ pub async fn run_web(profile: Option<String>) -> Result<()> {
     tracing::info!("等待扫码确认 (180s 超时)...");
     let cookies = web_qr::poll(&qr.qrcode_key).await?;
 
+    eprintln!("[DEBUG] 收集到的 cookies: {cookies:?}");
+
     let mut auth_profile = AuthProfile::default();
     auth_profile.name = profile_name.clone();
     for (key, value) in &cookies {
