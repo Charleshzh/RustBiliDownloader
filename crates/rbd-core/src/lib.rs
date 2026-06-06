@@ -121,8 +121,7 @@ pub fn is_safe_download_url(url: &str) -> bool {
 /// 第二次解析返回内网 IP. `is_safe_download_url()` 仅做字符串匹配,
 /// 本函数在下载前做真实的 DNS 解析并验证, 构成双重防线.
 pub fn resolve_and_validate_ip(url: &str) -> anyhow::Result<()> {
-    let parsed = url::Url::parse(url)
-        .map_err(|e| anyhow::anyhow!("URL 解析失败: {e}"))?;
+    let parsed = url::Url::parse(url).map_err(|e| anyhow::anyhow!("URL 解析失败: {e}"))?;
     let host = parsed
         .host_str()
         .ok_or_else(|| anyhow::anyhow!("URL 缺少主机名"))?;
