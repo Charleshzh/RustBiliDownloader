@@ -263,6 +263,11 @@ impl Extractor for FavListExtractor {
         };
 
         let value = api.get_fav_folder(*fid, 1).await?;
+        let code = value["code"].as_i64().unwrap_or(-1);
+        if code != 0 {
+            let msg = value["message"].as_str().unwrap_or("未知错误");
+            anyhow::bail!("收藏夹 API 返回错误 (code={code}): {msg}");
+        }
         let folder_title = value["data"]["title"]
             .as_str()
             .unwrap_or("收藏夹")
@@ -337,6 +342,11 @@ impl Extractor for MediaListExtractor {
         };
 
         let value: serde_json::Value = api.get_media_list(*biz_id).await?;
+        let code = value["code"].as_i64().unwrap_or(-1);
+        if code != 0 {
+            let msg = value["message"].as_str().unwrap_or("未知错误");
+            anyhow::bail!("播单 API 返回错误 (code={code}): {msg}");
+        }
 
         let ml_title = value["data"]["info"]["title"]
             .as_str()
@@ -492,6 +502,11 @@ impl Extractor for CollectionExtractor {
         };
 
         let value = api.get_collection(*mid, *sid, 1).await?;
+        let code = value["code"].as_i64().unwrap_or(-1);
+        if code != 0 {
+            let msg = value["message"].as_str().unwrap_or("未知错误");
+            anyhow::bail!("合集 API 返回错误 (code={code}): {msg}");
+        }
         parse_collection_response(&value, *mid)
     }
 }
@@ -516,6 +531,11 @@ impl Extractor for SpaceExtractor {
 
         // 取前 30 个视频 (第一页)
         let value = api.get_space_archives(mid, 1).await?;
+        let code = value["code"].as_i64().unwrap_or(-1);
+        if code != 0 {
+            let msg = value["message"].as_str().unwrap_or("未知错误");
+            anyhow::bail!("空间 API 返回错误 (code={code}): {msg}");
+        }
         let data = &value["data"];
 
         let owner_name = data["list"]["vlist"]

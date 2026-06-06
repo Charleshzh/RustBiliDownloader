@@ -154,6 +154,10 @@ impl BilibiliApi {
                     ("mid", mid.to_string()),
                     ("pn", page.to_string()),
                     ("ps", "30".to_string()),
+                    ("platform", "web".to_string()),
+                    ("web_location", "1550101".to_string()),
+                    ("order", "pubdate".to_string()),
+                    ("tid", "0".to_string()),
                 ],
             )
             .await?;
