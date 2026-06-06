@@ -69,7 +69,10 @@ async fn test_get_pagelist_public() -> Result<()> {
     // 每个分P 应有 cid 和 part 字段
     for page in pages {
         assert!(page["cid"].as_u64().is_some(), "分P 缺少 cid");
-        assert!(!page["part"].as_str().unwrap_or("").is_empty(), "分P 缺少 part 名称");
+        assert!(
+            !page["part"].as_str().unwrap_or("").is_empty(),
+            "分P 缺少 part 名称"
+        );
     }
 
     Ok(())
@@ -91,10 +94,7 @@ async fn test_url_parse_to_api_roundtrip() -> Result<()> {
     let api = BilibiliApi::new()?;
     let resp: serde_json::Value = api.get_view(&bvid).await?;
 
-    assert_eq!(
-        resp["data"]["bvid"].as_str().unwrap_or(""),
-        "BV1GJ411x7h7"
-    );
+    assert_eq!(resp["data"]["bvid"].as_str().unwrap_or(""), "BV1GJ411x7h7");
 
     Ok(())
 }
@@ -135,17 +135,11 @@ fn test_url_parsing_table() -> Result<()> {
 #[test]
 fn test_bv_av_conversion_consistency() -> Result<()> {
     // 已知的 BV/AV 对应关系 (来自 BBDown 参考实现)
-    let cases: Vec<(u64, &str)> = vec![
-        (170001, "BV17x411w7KC"),
-        (4567890, "BV1gs411B7Mu"),
-    ];
+    let cases: Vec<(u64, &str)> = vec![(170001, "BV17x411w7KC"), (4567890, "BV1gs411B7Mu")];
 
     for (av, expected_bv) in cases {
         let bv = av_to_bv(av)?;
-        assert_eq!(
-            bv, expected_bv,
-            "av{av} -> {bv}, 期望 {expected_bv}"
-        );
+        assert_eq!(bv, expected_bv, "av{av} -> {bv}, 期望 {expected_bv}");
     }
 
     Ok(())

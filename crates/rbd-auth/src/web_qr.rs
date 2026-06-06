@@ -280,8 +280,8 @@ fn extract_cookies_from_headers(headers: &reqwest::header::HeaderMap) -> HashMap
 /// 使用 `qrcode` crate 生成真正的终端 QR 图,
 /// 支持所有支持 Unicode 的终端.
 pub fn render_qr_terminal(url: &str) {
-    use qrcode::QrCode;
     use qrcode::render::unicode;
+    use qrcode::QrCode;
 
     let code = match QrCode::new(url) {
         Ok(c) => c,

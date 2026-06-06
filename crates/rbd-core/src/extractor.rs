@@ -198,9 +198,12 @@ fn parse_cheese_season_response(v: &serde_json::Value) -> VInfo {
                     let title = item["title"].as_str().unwrap_or("未命名");
                     let cid = item["cid"].as_u64().unwrap_or(0);
                     let aid = item["aid"].as_u64().unwrap_or(0);
-                    let duration = u32::try_from(item["duration"].as_u64().unwrap_or(0)).unwrap_or(0);
-                    let width = u32::try_from(item["dimension"]["width"].as_u64().unwrap_or(0)).unwrap_or(0);
-                    let height = u32::try_from(item["dimension"]["height"].as_u64().unwrap_or(0)).unwrap_or(0);
+                    let duration =
+                        u32::try_from(item["duration"].as_u64().unwrap_or(0)).unwrap_or(0);
+                    let width = u32::try_from(item["dimension"]["width"].as_u64().unwrap_or(0))
+                        .unwrap_or(0);
+                    let height = u32::try_from(item["dimension"]["height"].as_u64().unwrap_or(0))
+                        .unwrap_or(0);
                     Page {
                         page_index: u32::try_from(aid).unwrap_or(1).max(1),
                         cid,
@@ -270,7 +273,8 @@ impl Extractor for FavListExtractor {
                         let title = item["title"].as_str().unwrap_or("未命名");
                         let _bvid = item["bvid"].as_str().unwrap_or(""); // collected in first_bvid
                         let cid = item["page"]["cid"].as_u64().unwrap_or(0);
-                        let duration = u32::try_from(item["duration"].as_u64().unwrap_or(0)).unwrap_or(0);
+                        let duration =
+                            u32::try_from(item["duration"].as_u64().unwrap_or(0)).unwrap_or(0);
                         Page {
                             page_index: u32::try_from(i + 1).unwrap_or(1),
                             cid,
@@ -344,7 +348,8 @@ impl Extractor for MediaListExtractor {
                         let title = item["title"].as_str().unwrap_or("未命名");
                         let _bvid = item["bvid"].as_str().unwrap_or(""); // collected in first_bvid
                         let cid = item["page"]["cid"].as_u64().unwrap_or(0);
-                        let duration = u32::try_from(item["duration"].as_u64().unwrap_or(0)).unwrap_or(0);
+                        let duration =
+                            u32::try_from(item["duration"].as_u64().unwrap_or(0)).unwrap_or(0);
                         Page {
                             page_index: u32::try_from(i + 1).unwrap_or(1),
                             cid,
@@ -414,9 +419,13 @@ impl Extractor for SeriesExtractor {
                     .map(|item| {
                         let title = item["title"].as_str().unwrap_or("未命名");
                         let cid = item["cid"].as_u64().unwrap_or(0);
-                        let duration = u32::try_from(item["duration"].as_u64().unwrap_or(0)).unwrap_or(0);
-                        let width = u32::try_from(item["dimension"]["width"].as_u64().unwrap_or(0)).unwrap_or(0);
-                        let height = u32::try_from(item["dimension"]["height"].as_u64().unwrap_or(0)).unwrap_or(0);
+                        let duration =
+                            u32::try_from(item["duration"].as_u64().unwrap_or(0)).unwrap_or(0);
+                        let width = u32::try_from(item["dimension"]["width"].as_u64().unwrap_or(0))
+                            .unwrap_or(0);
+                        let height =
+                            u32::try_from(item["dimension"]["height"].as_u64().unwrap_or(0))
+                                .unwrap_or(0);
                         Page {
                             page_index: 0,
                             cid,
@@ -859,7 +868,8 @@ pub fn parse_collection_response(v: &serde_json::Value, mid: u64) -> Result<VInf
                 .map(|item| {
                     let title = item["title"].as_str().unwrap_or("未命名");
                     let cid = item["cid"].as_u64().unwrap_or(0);
-                    let duration = u32::try_from(item["duration"].as_u64().unwrap_or(0)).unwrap_or(0);
+                    let duration =
+                        u32::try_from(item["duration"].as_u64().unwrap_or(0)).unwrap_or(0);
                     Page {
                         page_index: 0,
                         cid,
