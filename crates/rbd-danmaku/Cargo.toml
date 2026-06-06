@@ -44,8 +44,5 @@ prost-types = { workspace = true }
 rayon = { workspace = true }
 rustc-hash = { workspace = true }
 
-[build-dependencies]
-prost-build = "0.13"
-
 [lints]
 workspace = true
