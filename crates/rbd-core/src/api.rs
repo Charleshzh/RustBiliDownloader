@@ -310,7 +310,10 @@ fn build_headers() -> HeaderMap {
         "Accept-Language",
         HeaderValue::from_static("zh-CN,zh;q=0.9,en;q=0.8"),
     );
-    headers.insert(REFERER, HeaderValue::from_static("https://www.bilibili.com"));
+    headers.insert(
+        REFERER,
+        HeaderValue::from_static("https://www.bilibili.com"),
+    );
     headers
 }
 
