@@ -89,9 +89,9 @@ fn compute_mixin_key(img_key: &str, sub_key: &str) -> String {
 ///
 /// # 算法
 /// 1. query 按 key 字典序排序
-/// 2. 移除 `&` 拼成连续字符串 (key + value 不含 `=`)
+/// 2. 构造 `key=value&key=value` (URL 编码, 保留 `=` 和 `&`)
 ///
-///   **注意**: B 站签名约定是不含 `=`, 即 `a=1&b=2` → `12` (顺序按 key 排序后拼接 key+value)
+///   与 bilibili-API-collect 文档一致: `MD5(url_encoded_query + mixin_key)`
 ///
 /// 3. 追加 `mixin_key`
 /// 4. `w_rid = MD5(...)`
@@ -101,15 +101,15 @@ pub fn sign_query(params: &[(&str, &str)], wbi: &WbiKey) -> String {
     sorted.sort_by(|a, b| a.0.cmp(b.0));
 
     // 过滤掉值为空的参数
-    let mut s = String::with_capacity(256);
-    for (k, v) in sorted.iter().filter(|(_, v)| !v.is_empty()) {
-        // URL 编码 (同 BBDown: 保留 `~` 不编码)
-        s.push_str(&url_encode_component(k));
-        s.push_str(&url_encode_component(v));
-    }
-    s.push_str(&wbi.mixin_key);
+    let msg: String = sorted
+        .iter()
+        .filter(|(_, v)| !v.is_empty())
+        .map(|(k, v)| format!("{}={}", url_encode_component(k), url_encode_component(v)))
+        .collect::<Vec<_>>()
+        .join("&");
+    let to_sign = msg + &wbi.mixin_key;
 
-    format!("{:x}", Md5::digest(s.as_bytes()))
+    format!("{:x}", Md5::digest(to_sign.as_bytes()))
 }
 
 fn url_encode_component(s: &str) -> String {

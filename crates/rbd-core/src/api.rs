@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use parking_lot::Mutex;
+use rand::Rng;
 use reqwest::{
     header::{HeaderMap, HeaderValue, COOKIE, REFERER, USER_AGENT},
     Client,
@@ -155,31 +156,22 @@ impl BilibiliApi {
         .await
     }
 
-    /// 获取空间投稿列表 (需模拟浏览器请求头绕过风控).
+    /// 获取空间投稿列表 (WBI 签名).
     pub async fn get_space_archives(&self, mid: u64, page: u32) -> Result<serde_json::Value> {
         let url = self
             .build_wbi_signed_url(
                 "https://api.bilibili.com/x/space/wbi/arc/search",
                 vec![
                     ("mid", mid.to_string()),
-                    ("pn", page.to_string()),
                     ("ps", "30".to_string()),
-                    ("platform", "web".to_string()),
+                    ("pn", page.to_string()),
                     ("order", "pubdate".to_string()),
                     ("tid", "0".to_string()),
                     ("keyword", String::new()),
                 ],
             )
             .await?;
-        let resp = self
-            .client
-            .get(&url)
-            .header("Origin", "https://space.bilibili.com")
-            .header(REFERER, format!("https://space.bilibili.com/{mid}"))
-            .send()
-            .await?
-            .error_for_status()?;
-        Ok(resp.json().await?)
+        self.get_json(&url).await
     }
 
     /// 获取合集信息 (UP 主合集, polymer API).
@@ -317,8 +309,22 @@ fn build_headers() -> HeaderMap {
     headers
 }
 
+/// 生成随机字母数字字符串 (用于 dm_img anti-bot 参数).
+fn rand_alphanumeric(len: usize) -> String {
+    let mut rng = rand::thread_rng();
+    (0..len)
+        .map(|_| rng.sample(rand::distributions::Alphanumeric) as char)
+        .collect()
+}
+
 fn build_wbi_signed_url(base: &str, params: Vec<(&str, String)>, wbi: &WbiKey) -> String {
     let mut query: Vec<(&str, String)> = params;
+
+    // Anti-bot dm_img_* 参数 (Yutto encode_wbi 行为, 全局 WBI 请求均注入)
+    query.push(("dm_img_list", "[]".to_string()));
+    query.push(("dm_img_str", rand_alphanumeric(32)));
+    query.push(("dm_cover_img_str", rand_alphanumeric(64)));
+
     query.push(("wts", chrono::Utc::now().timestamp().to_string()));
 
     let for_sign: Vec<(&str, &str)> = query.iter().map(|(k, v)| (*k, v.as_str())).collect();

@@ -511,6 +511,16 @@ impl Extractor for CollectionExtractor {
     }
 }
 
+/// 解析 B站 API 返回的时长字符串 (如 "3:45" / "1:02:08") 为秒数.
+fn parse_duration(s: &str) -> u32 {
+    let parts: Vec<u32> = s.split(':').filter_map(|p| p.parse().ok()).collect();
+    match parts.len() {
+        3 => parts[0] * 3600 + parts[1] * 60 + parts[2],
+        2 => parts[0] * 60 + parts[1],
+        _ => 0,
+    }
+}
+
 // ── SpaceExtractor ────────────────────────────────────────────────
 
 #[async_trait]
@@ -529,36 +539,32 @@ impl Extractor for SpaceExtractor {
             _ => anyhow::bail!("space extractor only supports space/mid ids"),
         };
 
-        // 取前 30 个视频 (第一页)
+        // WBI 签名端点, 与 Yutto 一致
         let value = api.get_space_archives(mid, 1).await?;
         let code = value["code"].as_i64().unwrap_or(-1);
         if code != 0 {
             let msg = value["message"].as_str().unwrap_or("未知错误");
-            anyhow::bail!("空间 API 返回错误 (code={code}): {msg}");
+            let hint = if code == -403 {
+                " (空间投稿 API 需登录; 请先运行 `rbd login` 再将 SESSDATA 写入 cookie)"
+            } else {
+                ""
+            };
+            anyhow::bail!("空间 API 返回错误 (code={code}): {msg}{hint}");
         }
-        let data = &value["data"];
 
-        let owner_name = data["list"]["vlist"]
-            .as_array()
-            .and_then(|items| items.first())
-            .and_then(|item| item["author"].as_str())
-            .unwrap_or("UP主")
-            .to_string();
-
-        let vlist = data["list"]["vlist"].as_array();
+        let vlist = value["data"]["list"]["vlist"].as_array();
         let pages: Vec<Page> = vlist
             .map(|items| {
                 items
                     .iter()
-                    .map(|item| {
+                    .enumerate()
+                    .map(|(idx, item)| {
                         let title = item["title"].as_str().unwrap_or("未命名");
                         let cid = item["cid"].as_u64().unwrap_or(0);
-                        let duration = item["length"]
-                            .as_str()
-                            .and_then(|s| s.parse::<u32>().ok())
-                            .unwrap_or(0);
+                        let length_str = item["length"].as_str().unwrap_or("0:00");
+                        let duration = parse_duration(length_str);
                         Page {
-                            page_index: 0,
+                            page_index: (idx + 1) as u32,
                             cid,
                             title: title.to_string(),
                             duration,
@@ -574,6 +580,8 @@ impl Extractor for SpaceExtractor {
             .and_then(|item| item["bvid"].as_str())
             .unwrap_or("")
             .to_string();
+
+        let owner_name = "UP主".to_string();
 
         Ok(VInfo {
             title: format!("{owner_name} 的空间投稿"),
