@@ -158,6 +158,8 @@ impl BilibiliApi {
                     ("web_location", "1550101".to_string()),
                     ("order", "pubdate".to_string()),
                     ("tid", "0".to_string()),
+                    ("keyword", String::new()),
+                    ("order_avoided", "true".to_string()),
                 ],
             )
             .await?;
@@ -180,12 +182,17 @@ impl BilibiliApi {
         .await
     }
 
-    /// 获取收藏夹信息 (需要 WBI 签名).
-    pub async fn get_fav_folder(&self, fid: u64, page: u32) -> Result<serde_json::Value> {
+    /// 获取收藏夹视频列表 (需要 WBI 签名, v3 endpoint).
+    pub async fn get_fav_folder(&self, media_id: u64, page: u32) -> Result<serde_json::Value> {
         let url = self
             .build_wbi_signed_url(
-                "https://api.bilibili.com/x/v2/fav/folder/created/list-all",
-                vec![("fid", fid.to_string()), ("pn", page.to_string())],
+                "https://api.bilibili.com/x/v3/fav/resource/list",
+                vec![
+                    ("media_id", media_id.to_string()),
+                    ("ps", "20".to_string()),
+                    ("pn", page.to_string()),
+                    ("platform", "web".to_string()),
+                ],
             )
             .await?;
         self.get_json(&url).await

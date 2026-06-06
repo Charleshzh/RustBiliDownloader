@@ -268,7 +268,7 @@ impl Extractor for FavListExtractor {
             let msg = value["message"].as_str().unwrap_or("未知错误");
             anyhow::bail!("收藏夹 API 返回错误 (code={code}): {msg}");
         }
-        let folder_title = value["data"]["title"]
+        let folder_title = value["data"]["info"]["title"]
             .as_str()
             .unwrap_or("收藏夹")
             .to_string();
@@ -281,13 +281,13 @@ impl Extractor for FavListExtractor {
                     .enumerate()
                     .map(|(i, item)| {
                         let title = item["title"].as_str().unwrap_or("未命名");
-                        let _bvid = item["bvid"].as_str().unwrap_or(""); // collected in first_bvid
-                        let cid = item["page"]["cid"].as_u64().unwrap_or(0);
+                        let _bvid = item["bvid"].as_str().unwrap_or("");
+                        // v3 fav API returns bvid at top level; cid resolved during download
                         let duration =
                             u32::try_from(item["duration"].as_u64().unwrap_or(0)).unwrap_or(0);
                         Page {
                             page_index: u32::try_from(i + 1).unwrap_or(1),
-                            cid,
+                            cid: 0, // resolved by bvid during download
                             title: title.to_string(),
                             duration,
                             dimension: String::new(),
