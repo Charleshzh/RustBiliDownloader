@@ -14,9 +14,6 @@ rustflags = ["-C", "link-arg=-fuse-ld=lld"]
 linker = "musl-gcc"
 rustflags = ["-C", "target-feature=+crt-static"]
 
-[target.aarch64-apple-darwin]
-rustflags = ["-C", "link-arg=-fuse-ld=lld"]
-
 # 加速编译的 codegen-backend
 [unstable]
 codegen-backend = true
