@@ -66,6 +66,7 @@ pub fn join_output(base: &Path, relative: &str) -> PathBuf {
 }
 
 /// 重复文件重命名: `foo.mp4` → `foo (1).mp4` → `foo (2).mp4`.
+#[must_use]
 pub fn unique_path(target: &Path) -> PathBuf {
     if !target.exists() {
         return target.to_path_buf();

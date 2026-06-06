@@ -26,11 +26,13 @@ pub struct ExtractorRegistry {
 
 impl ExtractorRegistry {
     /// 创建空注册表.
+    #[must_use]
     pub fn new() -> Self {
         Self { fetchers: vec![] }
     }
 
     /// 创建带默认 9 个抽取器的注册表.
+    #[must_use]
     pub fn with_defaults() -> Self {
         let mut registry = Self::new();
         registry.register(Box::new(NormalExtractor));
@@ -51,6 +53,7 @@ impl ExtractorRegistry {
     }
 
     /// 查找匹配的抽取器.
+    #[must_use]
     pub fn find(&self, id: &NormalizedId) -> Option<&dyn Extractor> {
         self.fetchers
             .iter()
@@ -195,11 +198,11 @@ fn parse_cheese_season_response(v: &serde_json::Value) -> VInfo {
                     let title = item["title"].as_str().unwrap_or("未命名");
                     let cid = item["cid"].as_u64().unwrap_or(0);
                     let aid = item["aid"].as_u64().unwrap_or(0);
-                    let duration = item["duration"].as_u64().unwrap_or(0) as u32;
-                    let width = item["dimension"]["width"].as_u64().unwrap_or(0) as u32;
-                    let height = item["dimension"]["height"].as_u64().unwrap_or(0) as u32;
+                    let duration = u32::try_from(item["duration"].as_u64().unwrap_or(0)).unwrap_or(0);
+                    let width = u32::try_from(item["dimension"]["width"].as_u64().unwrap_or(0)).unwrap_or(0);
+                    let height = u32::try_from(item["dimension"]["height"].as_u64().unwrap_or(0)).unwrap_or(0);
                     Page {
-                        page_index: (aid as u32).max(1),
+                        page_index: u32::try_from(aid).unwrap_or(1).max(1),
                         cid,
                         title: title.to_string(),
                         duration,
@@ -267,9 +270,9 @@ impl Extractor for FavListExtractor {
                         let title = item["title"].as_str().unwrap_or("未命名");
                         let _bvid = item["bvid"].as_str().unwrap_or(""); // collected in first_bvid
                         let cid = item["page"]["cid"].as_u64().unwrap_or(0);
-                        let duration = item["duration"].as_u64().unwrap_or(0) as u32;
+                        let duration = u32::try_from(item["duration"].as_u64().unwrap_or(0)).unwrap_or(0);
                         Page {
-                            page_index: (i + 1) as u32,
+                            page_index: u32::try_from(i + 1).unwrap_or(1),
                             cid,
                             title: title.to_string(),
                             duration,
@@ -341,9 +344,9 @@ impl Extractor for MediaListExtractor {
                         let title = item["title"].as_str().unwrap_or("未命名");
                         let _bvid = item["bvid"].as_str().unwrap_or(""); // collected in first_bvid
                         let cid = item["page"]["cid"].as_u64().unwrap_or(0);
-                        let duration = item["duration"].as_u64().unwrap_or(0) as u32;
+                        let duration = u32::try_from(item["duration"].as_u64().unwrap_or(0)).unwrap_or(0);
                         Page {
-                            page_index: (i + 1) as u32,
+                            page_index: u32::try_from(i + 1).unwrap_or(1),
                             cid,
                             title: title.to_string(),
                             duration,
@@ -411,9 +414,9 @@ impl Extractor for SeriesExtractor {
                     .map(|item| {
                         let title = item["title"].as_str().unwrap_or("未命名");
                         let cid = item["cid"].as_u64().unwrap_or(0);
-                        let duration = item["duration"].as_u64().unwrap_or(0) as u32;
-                        let width = item["dimension"]["width"].as_u64().unwrap_or(0) as u32;
-                        let height = item["dimension"]["height"].as_u64().unwrap_or(0) as u32;
+                        let duration = u32::try_from(item["duration"].as_u64().unwrap_or(0)).unwrap_or(0);
+                        let width = u32::try_from(item["dimension"]["width"].as_u64().unwrap_or(0)).unwrap_or(0);
+                        let height = u32::try_from(item["dimension"]["height"].as_u64().unwrap_or(0)).unwrap_or(0);
                         Page {
                             page_index: 0,
                             cid,
@@ -856,7 +859,7 @@ pub fn parse_collection_response(v: &serde_json::Value, mid: u64) -> Result<VInf
                 .map(|item| {
                     let title = item["title"].as_str().unwrap_or("未命名");
                     let cid = item["cid"].as_u64().unwrap_or(0);
-                    let duration = item["duration"].as_u64().unwrap_or(0) as u32;
+                    let duration = u32::try_from(item["duration"].as_u64().unwrap_or(0)).unwrap_or(0);
                     Page {
                         page_index: 0,
                         cid,

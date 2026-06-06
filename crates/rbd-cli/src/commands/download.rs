@@ -371,7 +371,7 @@ fn mux_files(
                 "av1" => "libaom-av1",
                 _ => "libx264",
             };
-            let target_acodec = match audio_codec {
+            let output_acodec = match audio_codec {
                 "flac" | "eac3" => "aac",
                 _ => audio_codec,
             };
@@ -380,7 +380,7 @@ fn mux_files(
                 Some(audio_path),
                 &output_path,
                 target_vcodec,
-                target_acodec,
+                output_acodec,
             )?;
             tracing::info!("ffmpeg 转码完成: {}", output_path.display());
         }

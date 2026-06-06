@@ -55,11 +55,13 @@ impl DownloadManager {
     }
 
     /// 获取当前任务状态.
+    #[must_use]
     pub fn job_state(&self) -> JobState {
         self.job_state.lock().unwrap().clone()
     }
 
     /// 获取取消标志 (可用于传递给下载任务以支持协作式取消).
+    #[must_use]
     pub fn cancelled_flag(&self) -> Arc<AtomicBool> {
         Arc::clone(&self.cancelled)
     }
@@ -68,6 +70,7 @@ impl DownloadManager {
     ///
     /// 设置取消标志并尝试将状态转换为 Cancelled.
     /// 终态 (Done/Failed/Cancelled) 不可取消, 返回 current state.
+    #[must_use]
     pub fn cancel(&self) -> JobState {
         self.cancelled.store(true, Ordering::SeqCst);
         let mut state = self.job_state.lock().unwrap();
@@ -84,6 +87,7 @@ impl DownloadManager {
     ///
     /// 只有 Running 状态可暂停.
     /// 返回转换后的状态 (Paused 或 current state).
+    #[must_use]
     pub fn pause(&self) -> JobState {
         let mut state = self.job_state.lock().unwrap();
         match state.transition(&JobState::Paused) {
@@ -99,6 +103,7 @@ impl DownloadManager {
     ///
     /// 只有 Paused 状态可恢复.
     /// 返回转换后的状态 (Running 或 current state).
+    #[must_use]
     pub fn resume(&self) -> JobState {
         self.cancelled.store(false, Ordering::SeqCst);
         let mut state = self.job_state.lock().unwrap();
@@ -112,6 +117,7 @@ impl DownloadManager {
     }
 
     /// 标记任务为运行中.
+    #[must_use]
     pub fn mark_running(&self) -> JobState {
         let mut state = self.job_state.lock().unwrap();
         match state.transition(&JobState::Running) {
@@ -124,6 +130,7 @@ impl DownloadManager {
     }
 
     /// 标记任务为完成.
+    #[must_use]
     pub fn mark_done(&self) -> JobState {
         let mut state = self.job_state.lock().unwrap();
         match state.transition(&JobState::Done) {
@@ -166,7 +173,7 @@ impl DownloadManager {
             return Err(anyhow!("Aria2c 模式将在 M4 接入 download_concurrent"));
         }
 
-        self.mark_running();
+        let _ = self.mark_running();
 
         let video_future = if let Some(video_spec) = video {
             let cb = on_event.clone();
@@ -201,7 +208,7 @@ impl DownloadManager {
             let _ = self.parallel.download(spec, subtitle_cb).await?;
         }
 
-        self.mark_done();
+        let _ = self.mark_done();
         Ok((video_path, audio_path))
     }
 
@@ -239,7 +246,7 @@ mod tests {
     #[test]
     fn test_pause_from_running() {
         let mgr = DownloadManager::new(DownloadMode::Parallel);
-        mgr.mark_running();
+        let _ = mgr.mark_running();
         let state = mgr.pause();
         assert_eq!(state, JobState::Paused);
     }
@@ -262,8 +269,8 @@ mod tests {
     #[test]
     fn test_resume_from_paused() {
         let mgr = DownloadManager::new(DownloadMode::Parallel);
-        mgr.mark_running();
-        mgr.pause();
+        let _ = mgr.mark_running();
+        let _ = mgr.pause();
         let state = mgr.resume();
         assert_eq!(state, JobState::Running);
     }
@@ -271,7 +278,7 @@ mod tests {
     #[test]
     fn test_cancel_is_terminal() {
         let mgr = DownloadManager::new(DownloadMode::Parallel);
-        mgr.cancel();
+        let _ = mgr.cancel();
         // Cannot transition from Cancelled
         let state = mgr.mark_running();
         assert_eq!(state, JobState::Cancelled);
@@ -280,7 +287,7 @@ mod tests {
     #[test]
     fn test_mark_failed() {
         let mgr = DownloadManager::new(DownloadMode::Parallel);
-        mgr.mark_running();
+        let _ = mgr.mark_running();
         let state = mgr.mark_failed("network timeout");
         assert_eq!(state, JobState::Failed("network timeout".into()));
     }

@@ -112,6 +112,8 @@ struct SubEvent {
 }
 
 /// 格式化时间戳: `00:00:01,500` (SRT 用逗号分隔毫秒).
+/// f64→u64 转换: seconds 来自解析数据非负, round 确保安全.
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
 fn format_timestamp(seconds: f64) -> String {
     let total_ms = (seconds * 1000.0).round() as u64;
     let ms = total_ms % 1000;
@@ -124,6 +126,8 @@ fn format_timestamp(seconds: f64) -> String {
 }
 
 /// 格式化 ASS 时间戳: `0:00:01.50`.
+/// f64→u64 转换: seconds 来自解析数据非负, round 确保安全.
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
 fn format_ass_timestamp(seconds: f64) -> String {
     let total_cs = (seconds * 100.0).round() as u64;
     let cs = total_cs % 100;

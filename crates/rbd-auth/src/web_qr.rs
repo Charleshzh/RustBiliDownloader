@@ -112,7 +112,7 @@ pub async fn poll(qrcode_key: &str) -> Result<HashMap<String, String>> {
         };
 
         let data = &value["data"];
-        let code: i32 = data["code"].as_i64().unwrap_or(-1) as i32;
+        let code: i32 = i32::try_from(data["code"].as_i64().unwrap_or(-1)).unwrap_or(-1);
 
         match code {
             0 => {

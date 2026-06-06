@@ -82,6 +82,7 @@ pub fn render_path(pattern: &str, ctx: &Context, ext: &str) -> anyhow::Result<st
 }
 
 /// 用 JSON 值构建 Context.
+#[must_use]
 pub fn context_from_json(value: &serde_json::Value) -> Context {
     Context::from_serialize(value).unwrap_or_default()
 }

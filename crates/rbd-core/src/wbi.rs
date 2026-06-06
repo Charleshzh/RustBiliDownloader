@@ -36,11 +36,13 @@ pub struct WbiKey {
 
 impl WbiKey {
     /// 从 `img_url` / `sub_url` 直接构造.
+    #[must_use]
     pub fn from_urls(img_url: &str, sub_url: &str) -> Self {
         Self::from_nav(img_url, sub_url)
     }
 
     /// 从 `nav` API 响应构造.
+    #[must_use]
     pub fn from_nav(img_url: &str, sub_url: &str) -> Self {
         let img_key = extract_key_from_url(img_url);
         let sub_key = extract_key_from_url(sub_url);
@@ -54,6 +56,7 @@ impl WbiKey {
     }
 
     /// 缓存是否过期 (默认 1h, 与 `BBDown` 一致).
+    #[must_use]
     pub fn is_expired(&self) -> bool {
         self.cached_at.elapsed() > Duration::from_secs(3600)
     }
@@ -92,6 +95,7 @@ fn compute_mixin_key(img_key: &str, sub_key: &str) -> String {
 ///
 /// 3. 追加 `mixin_key`
 /// 4. `w_rid = MD5(...)`
+#[must_use]
 pub fn sign_query(params: &[(&str, &str)], wbi: &WbiKey) -> String {
     let mut sorted: Vec<(&str, &str)> = params.to_vec();
     sorted.sort_by(|a, b| a.0.cmp(b.0));

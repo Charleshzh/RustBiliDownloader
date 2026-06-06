@@ -17,6 +17,7 @@ pub enum ApiMode {
 
 impl ApiMode {
     /// 从字符串解析模式.
+    #[must_use]
     pub fn parse(s: &str) -> Self {
         match s.to_lowercase().as_str() {
             "web" => Self::Web,
@@ -28,6 +29,7 @@ impl ApiMode {
     }
 
     /// 返回模式字符串.
+    #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
             Self::Web => "web",

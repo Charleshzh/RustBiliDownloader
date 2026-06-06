@@ -71,6 +71,8 @@ pub fn write_danmaku(
     format!("Dialogue: 0,{start},{end},Default,,0,0,0,,{pos_tag}{color_tag}{content}\n")
 }
 
+/// 格式化 ASS 时间戳, f32→u32: t 非负, 值在合理范围内.
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
 fn format_ass_time(t: f32) -> String {
     let h = (t / 3600.0) as u32;
     let m = ((t % 3600.0) / 60.0) as u32;

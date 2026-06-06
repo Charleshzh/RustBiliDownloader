@@ -143,6 +143,7 @@ pub fn parse_playurl(value: &serde_json::Value) -> Result<PlayUrlResponse> {
 
 impl PlayUrlData {
     /// 转为视频轨.
+    #[must_use]
     pub fn into_tracks(self) -> Vec<VideoTrack> {
         let quality_descs = accept_description_to_quality_desc(&self.accept_description);
         self.dash
@@ -181,6 +182,7 @@ impl PlayUrlData {
     }
 
     /// 转为音频轨.
+    #[must_use]
     pub fn into_audio_tracks(self) -> Vec<AudioTrack> {
         let mut tracks = Vec::new();
         if let Some(dash) = self.dash {
@@ -207,6 +209,7 @@ impl PlayUrlData {
 }
 
 /// 将 `accept_description` 规格化为描述列表.
+#[must_use]
 pub fn accept_description_to_quality_desc(accept: &[String]) -> Vec<String> {
     accept.iter().map(|item| item.trim().to_string()).collect()
 }

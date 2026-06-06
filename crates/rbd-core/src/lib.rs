@@ -16,6 +16,7 @@
 /// - 其他保留地址: 0.0.0.0/8
 /// - IPv6 loopback `[::1]`
 /// - .local / .internal 域名
+#[must_use]
 pub fn is_safe_download_url(url: &str) -> bool {
     let Ok(parsed) = url::Url::parse(url) else {
         return false;

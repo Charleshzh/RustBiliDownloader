@@ -234,16 +234,21 @@ pub mod protobuf {
         let mut list = DanmakuList::with_capacity(reply.elems.len());
 
         for elem in reply.elems {
-            // progress 单位是毫秒, 转换为秒
+            // progress 单位是毫秒, 转换为秒; i32→f32 精度足够
+            #[allow(clippy::cast_precision_loss)]
             let time = elem.progress as f32 / 1000.0;
-            // mode: 与 XML 定义一致, 直接透传
+            // mode: 与 XML 定义一致, 直接透传; clamped to u8 range
+            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
             let mode = elem.mode.clamp(0, i32::from(u8::MAX)) as u8;
+            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
             let font_size = elem.fontsize.clamp(0, i32::from(u8::MAX)) as u8;
             // color: 十进制 RGB, u64 → u32 (B 站颜色始终在 0x000000..0xFFFFFF)
+            #[allow(clippy::cast_possible_truncation)]
             let color = elem.color as u32;
             // midHash → sender_id: 尝试解析为 u64, 失败则用 0
             let sender_id = elem.mid_hash.parse::<u64>().unwrap_or(0);
 
+            #[allow(clippy::cast_sign_loss)]
             list.push(Danmaku {
                 id: elem.id as u64,
                 time,

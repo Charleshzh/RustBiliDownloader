@@ -67,6 +67,7 @@ pub fn render_to_ass(list: &DanmakuList, opts: &RenderOptions) -> Result<String>
 /// 并行渲染多个弹幕列表.
 ///
 /// 使用 `rayon::into_par_iter` 实现多列表并行处理.
+#[must_use]
 pub fn render_batch_parallel(lists: &[&DanmakuList], opts: &RenderOptions) -> Vec<Result<String>> {
     use rayon::prelude::*;
     lists.par_iter().map(|l| render_to_ass(l, opts)).collect()

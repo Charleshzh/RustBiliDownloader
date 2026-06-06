@@ -54,6 +54,7 @@ impl JobState {
     }
 
     /// 是否为终态 (不可再转换).
+    #[must_use]
     pub fn is_terminal(&self) -> bool {
         matches!(
             self,

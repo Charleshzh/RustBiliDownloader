@@ -89,7 +89,7 @@ pub async fn poll(auth_code: &str) -> Result<HashMap<String, String>> {
         };
 
         let data = &value["data"];
-        let code: i32 = data["code"].as_i64().unwrap_or(-1) as i32;
+        let code: i32 = i32::try_from(data["code"].as_i64().unwrap_or(-1)).unwrap_or(-1);
 
         match code {
             0 => {
@@ -143,7 +143,7 @@ pub async fn confirm(auth_code: &str, code: &str) -> Result<HashMap<String, Stri
         .json()
         .await?;
 
-    let code_val: i32 = value["code"].as_i64().unwrap_or(-1) as i32;
+    let code_val: i32 = i32::try_from(value["code"].as_i64().unwrap_or(-1)).unwrap_or(-1);
     if code_val != 0 {
         return Err(anyhow!(
             "TV 登录确认失败: {}",

@@ -23,7 +23,9 @@ pub fn rgb_to_ass_color(rgb: u32) -> String {
 /// 将 B 站不透明度 (0.0-1.0) 转换为 ASS alpha 值 (0-255).
 ///
 /// `alpha = 255 - (opacity * 255)`
+/// f32→u8: clamped to [0,1] so result is in [0,255], safe.
 #[must_use]
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
 pub fn opacity_to_ass_alpha(opacity: f32) -> u8 {
     let o = opacity.clamp(0.0, 1.0);
     (255.0 - o * 255.0) as u8

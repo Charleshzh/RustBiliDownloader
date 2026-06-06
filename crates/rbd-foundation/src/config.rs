@@ -25,6 +25,7 @@ pub fn config_path() -> PathBuf {
 }
 
 /// 加载 TOML 配置文件, 不存在则返回默认值.
+#[must_use]
 pub fn load_or_default<T: serde::de::DeserializeOwned + Default>() -> T {
     load(&config_path()).unwrap_or_default()
 }

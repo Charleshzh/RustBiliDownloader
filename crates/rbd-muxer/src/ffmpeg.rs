@@ -53,7 +53,7 @@ impl FfmpegMuxer {
         audio: Option<&Path>,
         output: &Path,
         target_vcodec: &str,
-        target_acodec: &str,
+        output_acodec: &str,
     ) -> Result<()> {
         let mut cmd = Command::new(&self.ffmpeg_path);
         cmd.arg("-i").arg(video);
@@ -63,7 +63,7 @@ impl FfmpegMuxer {
         cmd.arg("-c:v")
             .arg(target_vcodec)
             .arg("-c:a")
-            .arg(target_acodec)
+            .arg(output_acodec)
             .arg(output);
 
         let status = cmd

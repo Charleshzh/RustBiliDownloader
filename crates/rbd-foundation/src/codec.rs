@@ -6,6 +6,7 @@
 pub const BV_ALPHABET: &[u8; 58] = b"FcwAPNKTMug3GV5Lj7EJnHpWsx4tb8haYeviqBz6rkCy12mUSDQX9RdoZf";
 
 /// 十六进制编码 (小写).
+#[must_use]
 pub fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().fold(String::new(), |mut s, b| {
         use std::fmt::Write;
@@ -26,6 +27,7 @@ pub fn hex_decode(s: &str) -> anyhow::Result<Vec<u8>> {
 }
 
 /// URL 编码 (保留 `~_-!.*'()` 不编码, 模拟 JS `encodeURIComponent`).
+#[must_use]
 pub fn url_encode_component(s: &str) -> String {
     s.chars()
         .map(|c| match c {
@@ -54,6 +56,7 @@ pub fn url_decode_component(s: &str) -> anyhow::Result<String> {
 }
 
 /// Base58 编码 (B 站固定表).
+#[must_use]
 pub fn base58_encode(bytes: &[u8]) -> String {
     let mut result = String::new();
     let mut leading_zeros = 0;
@@ -76,6 +79,7 @@ pub fn base58_encode(bytes: &[u8]) -> String {
 }
 
 /// MD5 哈希 (Hex 字符串).
+#[must_use]
 pub fn md5_hex(bytes: &[u8]) -> String {
     use md5::{Digest, Md5};
     let mut h = Md5::new();
@@ -84,6 +88,7 @@ pub fn md5_hex(bytes: &[u8]) -> String {
 }
 
 /// SHA1 哈希.
+#[must_use]
 pub fn sha1_hex(bytes: &[u8]) -> String {
     use sha1::{Digest, Sha1};
     let mut h = Sha1::new();

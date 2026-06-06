@@ -77,6 +77,7 @@ impl BilibiliApi {
     }
 
     /// 获取缓存中的 WBI key.
+    #[must_use]
     pub fn cached_wbi_key(&self) -> Option<WbiKey> {
         self.wbi_key.lock().clone()
     }

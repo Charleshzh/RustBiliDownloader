@@ -22,7 +22,11 @@ impl DownloadProgress {
         if self.total == 0 {
             0.0
         } else {
-            (self.downloaded as f64 / self.total as f64) * 100.0
+            // percentage display: precision loss is acceptable
+            #[allow(clippy::cast_precision_loss)]
+            {
+                (self.downloaded as f64 / self.total as f64) * 100.0
+            }
         }
     }
 
@@ -40,10 +44,14 @@ impl DownloadProgress {
     }
 }
 
+/// 字节转 MB, 精度损失可接受 (仅用于显示).
+#[allow(clippy::cast_precision_loss)]
 fn bytes_to_mb(bytes: u64) -> f64 {
     bytes as f64 / 1024.0 / 1024.0
 }
 
+/// 格式化 ETA, f64→u64: max(0) 移除负数, round 保证安全.
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
 fn format_eta(seconds: f64) -> String {
     let total = seconds.max(0.0).round() as u64;
     let minutes = total / 60;

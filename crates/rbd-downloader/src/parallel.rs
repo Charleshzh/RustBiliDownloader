@@ -161,11 +161,14 @@ impl ParallelDownloader {
                 .map_err(|e| anyhow!("下载任务 join 失败: {e}"))??;
             let current = downloaded.load(std::sync::atomic::Ordering::Relaxed);
             let elapsed = started_at.elapsed().as_secs_f64().max(0.001);
+            // speed display: precision loss is acceptable
+            #[allow(clippy::cast_precision_loss)]
+            let speed = current as f64 / elapsed;
             on_event(DownloadEvent::Progress {
                 task_id: spec.task_id.clone(),
                 downloaded: current,
                 total,
-                speed_bps: current as f64 / elapsed,
+                speed_bps: speed,
             });
         }
 
