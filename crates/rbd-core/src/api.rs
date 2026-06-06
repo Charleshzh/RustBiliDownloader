@@ -309,7 +309,7 @@ fn build_headers() -> HeaderMap {
     headers
 }
 
-/// 生成随机字母数字字符串 (用于 dm_img anti-bot 参数).
+/// 生成随机字母数字字符串 (用于 `dm_img` anti-bot 参数).
 fn rand_alphanumeric(len: usize) -> String {
     let mut rng = rand::thread_rng();
     (0..len)
