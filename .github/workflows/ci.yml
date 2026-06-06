@@ -29,7 +29,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - run: cargo test --workspace
+      # --lib excludes integration tests (tests/integration_test.rs)
+      # which call real B站 APIs — often rate-limited or geo-blocked
+      # on GitHub datacenter IPs. Run integration tests locally instead.
+      - run: cargo test --workspace --lib
 
   clippy:
     name: cargo clippy

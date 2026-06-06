@@ -275,12 +275,35 @@ fn extract_cookies_from_headers(headers: &reqwest::header::HeaderMap) -> HashMap
     cookies
 }
 
-/// 将二维码 URL 渲染到终端.
+/// 将二维码 URL 渲染到终端 (Unicode 字符块).
 ///
-/// TODO: M5 使用 `qrcode` + `image` 生成真正的终端 QR 图.
+/// 使用 `qrcode` crate 生成真正的终端 QR 图,
+/// 支持所有支持 Unicode 的终端.
 pub fn render_qr_terminal(url: &str) {
-    println!("\n请使用 B 站 App 扫描下方二维码登录:");
-    println!("{url}");
+    use qrcode::QrCode;
+    use qrcode::render::unicode;
+
+    let code = match QrCode::new(url) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("QR 生成失败: {e}");
+            println!("请手动访问: {url}");
+            return;
+        }
+    };
+
+    println!();
+    println!("请使用 B 站 App 扫描下方二维码登录:");
+    println!();
+    // Unicode 块渲染: ▀▄█▌ 高对比度
+    let image = code
+        .render::<unicode::Dense1x2>()
+        .dark_color(unicode::Dense1x2::Dark)
+        .light_color(unicode::Dense1x2::Light)
+        .build();
+    println!("{image}");
+    println!();
+    println!("如果二维码无法显示, 请手动访问: {url}");
     println!();
 }
 
