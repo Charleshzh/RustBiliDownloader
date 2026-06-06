@@ -1,4 +1,7 @@
-//! ffmpeg 包装器.
+//! ffmpeg 包装器 — DASH remux 与转码.
+//!
+//! 提供 `merge_copy` (快速复制流, 不重新编码) 和 `transcode` (完整转码) 两条路径.
+//! 自动查找系统 ffmpeg 二进制, 通过 `std::process::Command` 调用.
 
 use anyhow::Result;
 use std::path::{Path, PathBuf};

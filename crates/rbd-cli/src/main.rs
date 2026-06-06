@@ -18,7 +18,14 @@ mod progress;
 
 /// RBD - 纯 Rust B 站视频下载器
 #[derive(Parser, Debug)]
-#[command(name = "rbd", version, about, long_about = None)]
+#[command(
+    name = "rbd",
+    version,
+    about,
+    long_about = None,
+    after_help = "示例:\n  rbd download BV1GJ411x7h7\n  rbd download --interactive https://www.bilibili.com/video/BV1GJ411x7h7\n  rbd login\n  rbd info https://www.bilibili.com/bangumi/play/ss39443\n  rbd batch urls.txt\n  rbd completions bash",
+    after_long_help = "主页: https://github.com/Charleshzh/RustBiliDownloader"
+)]
 struct Cli {
     #[command(subcommand)]
     command: Cmd,

@@ -41,10 +41,16 @@
 ### 安装
 
 ```bash
-# 从源码编译 (需 Rust 1.85+)
+# 方式 1: cargo install (需 Rust 1.85+)
+cargo install --git https://github.com/Charleshzh/RustBiliDownloader.git
+
+# 方式 2: 从源码编译
 git clone https://github.com/Charleshzh/RustBiliDownloader.git
 cd RustBiliDownloader
 cargo build --release
+
+# 方式 3: GitHub Releases (预编译二进制)
+# 访问 https://github.com/Charleshzh/RustBiliDownloader/releases 下载对应平台
 ```
 
 ### 使用
