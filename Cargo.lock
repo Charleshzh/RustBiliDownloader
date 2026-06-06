@@ -588,6 +588,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap_complete"
+version = "4.6.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0a7a9bfdb35811f9e59832f0f05975114d2251b415fb534108e6f34060fd772"
+dependencies = [
+ "clap",
+]
+
+[[package]]
 name = "clap_derive"
 version = "4.5.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2825,6 +2834,7 @@ dependencies = [
  "async-trait",
  "chrono",
  "clap",
+ "clap_complete",
  "console",
  "dialoguer",
  "dirs",
@@ -2895,7 +2905,6 @@ dependencies = [
  "futures 0.3.32",
  "once_cell",
  "prost",
- "prost-build",
  "prost-types",
  "quick-xml",
  "rayon",
@@ -2958,7 +2967,6 @@ dependencies = [
  "sha1",
  "tempfile",
  "tera",
- "thiserror 1.0.69",
  "tokio",
  "toml",
  "toml_edit 0.22.22",

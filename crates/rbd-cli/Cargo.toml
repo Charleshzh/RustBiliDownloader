@@ -31,6 +31,7 @@ futures = { workspace = true }
 
 # CLI
 clap = { workspace = true }
+clap_complete = "4.5"
 dialoguer = { workspace = true }
 indicatif = { workspace = true }
 console = { workspace = true }

@@ -5,7 +5,9 @@
 //! **设计**: M0 仅搭骨架, 实际命令在 M9 集成.
 //! 决策: **Q10 仅中文**, 所有错误信息 / 日志 / 帮助均中文.
 
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
+use std::io;
+use std::path::PathBuf;
 use std::process::ExitCode;
 
 mod args;
@@ -119,6 +121,18 @@ enum Cmd {
 
     /// 显示版本
     Version,
+
+    /// 生成 Shell 补全脚本
+    Completions {
+        /// Shell 类型
+        shell: clap_complete::Shell,
+    },
+
+    /// 批量下载 (每行一个 URL)
+    Batch {
+        /// 包含 URL 列表的文件
+        file: PathBuf,
+    },
 }
 
 #[tokio::main(flavor = "multi_thread", worker_threads = 8)]
@@ -183,6 +197,12 @@ async fn main() -> ExitCode {
             println!("rbd {} (RustBiliDownloader)", env!("CARGO_PKG_VERSION"));
             Ok(())
         }
+        Cmd::Completions { shell } => {
+            let mut cmd = Cli::command();
+            clap_complete::generate(shell, &mut cmd, "rbd", &mut io::stdout());
+            Ok(())
+        }
+        Cmd::Batch { file } => commands::batch::run(file).await,
     };
 
     match result {
