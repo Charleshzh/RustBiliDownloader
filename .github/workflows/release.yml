@@ -19,15 +19,23 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             binary: rbd
+            ext: ""
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             binary: rbd.exe
+            ext: ".exe"
           - os: macos-latest
             target: aarch64-apple-darwin
             binary: rbd
+            ext: ""
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        shell: bash
+        run: echo "ver=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -41,11 +49,29 @@ jobs:
       - name: Build release
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Upload binary
+      - name: Package (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          ARCHIVE="rbd-v${{ steps.version.outputs.ver }}-${{ matrix.target }}.tar.gz"
+          cd target/${{ matrix.target }}/release
+          tar czf "../../../${ARCHIVE}" ${{ matrix.binary }}
+          echo "artifact=${ARCHIVE}" >> "$GITHUB_ENV"
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $ver = "${{ steps.version.outputs.ver }}"
+          $target = "${{ matrix.target }}"
+          $archive = "rbd-v${ver}-${target}.zip"
+          Set-Location -Path "target/${{ matrix.target }}/release"
+          Compress-Archive -Path ${{ matrix.binary }} -DestinationPath "../../../${archive}"
+          echo "artifact=${archive}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/${{ matrix.binary }}
+          name: rbd-v${{ steps.version.outputs.ver }}-${{ matrix.target }}
+          path: ${{ env.artifact }}
 
   release:
     name: Create Release
@@ -53,6 +79,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
+
+      - name: Extract version
+        id: version
+        shell: bash
+        run: echo "ver=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
       - name: Show artifacts
         run: ls -R
@@ -62,9 +93,9 @@ jobs:
         with:
           name: ${{ github.ref_name }}
           files: |
-            x86_64-unknown-linux-gnu/rbd
-            x86_64-pc-windows-msvc/rbd.exe
-            aarch64-apple-darwin/rbd
+            rbd-v${{ steps.version.outputs.ver }}-x86_64-unknown-linux-gnu/rbd-v${{ steps.version.outputs.ver }}-x86_64-unknown-linux-gnu.tar.gz
+            rbd-v${{ steps.version.outputs.ver }}-x86_64-pc-windows-msvc/rbd-v${{ steps.version.outputs.ver }}-x86_64-pc-windows-msvc.zip
+            rbd-v${{ steps.version.outputs.ver }}-aarch64-apple-darwin/rbd-v${{ steps.version.outputs.ver }}-aarch64-apple-darwin.tar.gz
           draft: false
           prerelease: false
           generate_release_notes: true
