@@ -165,6 +165,11 @@ async fn poll_once(client: &reqwest::Client, url: &str) -> Result<serde_json::Va
 ///
 /// 额外兜底: 从原始重定向 URL 的 query 参数提取 `SESSDATA/bili_jct/DedeUserID`,
 /// 因为 B 站 crossDomain 端点把这些值同时放在 URL query 和 Set-Cookie 中.
+///
+/// # 安全
+///
+/// 重定向目标域名限制为 B 站官方域名 (.bilibili.com / .biligame.com),
+/// 防止被恶意利用跳转到第三方服务器.
 async fn collect_login_cookies(
     client: &reqwest::Client,
     redirect_url: String,
@@ -204,7 +209,7 @@ async fn collect_login_cookies(
                     .to_str()
                     .map_err(|_| anyhow!("Location 头解析失败"))?;
                 // 处理相对 URL: 绝对化
-                current_url = if loc.starts_with("http") {
+                let resolved = if loc.starts_with("http") {
                     loc.to_string()
                 } else {
                     base_url
@@ -212,6 +217,15 @@ async fn collect_login_cookies(
                         .map_err(|e| anyhow!("Location URL 拼接失败: {e}"))?
                         .to_string()
                 };
+                // 安全检查: 只允许重定向到 B 站官方域名
+                if !is_allowed_redirect_host(&resolved) {
+                    let host = reqwest::Url::parse(&resolved)
+                        .ok()
+                        .and_then(|u| u.host_str().map(String::from))
+                        .unwrap_or_else(|| resolved.clone());
+                    anyhow::bail!("重定向到未授权域名: {host}");
+                }
+                current_url = resolved;
                 continue;
             }
         }
@@ -307,6 +321,23 @@ pub fn render_qr_terminal(url: &str) {
     println!();
 }
 
+/// 检查重定向目标是否在 B 站官方域名允许列表中.
+///
+/// 允许后缀: `.bilibili.com`, `.biligame.com`.
+/// 仅允许 HTTPS/HTTP URL.
+fn is_allowed_redirect_host(url: &str) -> bool {
+    let Ok(parsed) = reqwest::Url::parse(url) else {
+        return false;
+    };
+    let Some(host) = parsed.host_str() else {
+        return false;
+    };
+    if !matches!(parsed.scheme(), "https" | "http") {
+        return false;
+    }
+    host.ends_with(".bilibili.com") || host.ends_with(".biligame.com")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -396,5 +427,29 @@ mod tests {
     fn test_parse_auth_query_params_empty() {
         let cookies = parse_auth_query_params("https://www.bilibili.com/");
         assert!(cookies.is_empty());
+    }
+
+    #[test]
+    fn test_is_allowed_redirect_host_valid() {
+        assert!(is_allowed_redirect_host(
+            "https://passport.bilibili.com/x/crossDomain"
+        ));
+        assert!(is_allowed_redirect_host("https://www.bilibili.com/"));
+        assert!(is_allowed_redirect_host(
+            "https://api.bilibili.com/x/web-interface/nav"
+        ));
+        assert!(is_allowed_redirect_host(
+            "https://passport.biligame.com/login"
+        ));
+        assert!(is_allowed_redirect_host("https://www.biligame.com/"));
+        // 相对 URL 被 base_url 拼接后也会变成完整 URL
+    }
+
+    #[test]
+    fn test_is_allowed_redirect_host_invalid() {
+        assert!(!is_allowed_redirect_host("https://evil.com/bilibili.com"));
+        assert!(!is_allowed_redirect_host("https://bilibili.com.evil.com/"));
+        assert!(!is_allowed_redirect_host("https://192.168.1.1/redirect"));
+        assert!(!is_allowed_redirect_host("ftp://passport.bilibili.com/"));
     }
 }

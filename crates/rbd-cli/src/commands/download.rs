@@ -263,7 +263,11 @@ pub async fn run(args: DownloadArgs) -> Result<()> {
 
         // 下载弹幕
         if !args.no_danmaku {
-            fetch_danmaku(&api, &vinfo.bvid, page.cid, &output_dir, &safe_title);
+            match fetch_danmaku(&api, page.cid, &output_dir, &safe_title).await {
+                Ok(0) => tracing::debug!("无弹幕"),
+                Ok(_) => {}
+                Err(e) => tracing::warn!("弹幕下载失败: {e}"),
+            }
         }
 
         tracing::info!("分 P {} 完成", i + 1);
@@ -424,10 +428,34 @@ async fn fetch_subtitles(
     Ok(count)
 }
 
-/// 下载弹幕.
-fn fetch_danmaku(_api: &BilibiliApi, _bvid: &str, _cid: u64, _output_dir: &Path, _title: &str) {
-    // TODO M5: 从 B 站 API 获取弹幕并渲染为 ASS
-    tracing::debug!("弹幕下载功能将在 M5 实现");
+/// 下载弹幕并渲染为 ASS.
+async fn fetch_danmaku(
+    api: &BilibiliApi,
+    cid: u64,
+    output_dir: &Path,
+    title: &str,
+) -> Result<usize> {
+    let xml = api
+        .get_danmaku_xml(cid)
+        .await
+        .with_context(|| format!("获取弹幕 XML 失败 (cid={cid})"))?;
+
+    let list = rbd_danmaku::parse_xml(&xml).with_context(|| "解析弹幕 XML 失败")?;
+
+    if list.is_empty() {
+        tracing::info!("无弹幕");
+        return Ok(0);
+    }
+
+    let opts = rbd_danmaku::RenderOptions::default();
+    let ass = rbd_danmaku::render_to_ass(&list, &opts).with_context(|| "渲染弹幕 ASS 失败")?;
+
+    let path = output_dir.join(format!("{title}.ass"));
+    std::fs::write(&path, ass.as_bytes())
+        .with_context(|| format!("写入弹幕文件失败: {}", path.display()))?;
+
+    tracing::info!("弹幕已保存: {}", path.display());
+    Ok(1)
 }
 
 /// 交互式选择视频/音频轨.

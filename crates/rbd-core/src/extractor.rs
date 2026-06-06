@@ -1,6 +1,6 @@
 //! Extractor trait + 注册表 + 各类 ID 抽取器.
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use async_trait::async_trait;
 use serde::Deserialize;
 
@@ -153,8 +153,13 @@ impl Extractor for BangumiExtractor {
             api.get_bangumi_season(*season_id).await?
         } else if let Some(ep_id) = ep_id {
             api.get_bangumi_ep(*ep_id).await?
-        } else if media_id.is_some() {
-            anyhow::bail!("media_id based bangumi extraction not yet implemented")
+        } else if let Some(media_id) = media_id {
+            // 通过 media_id 查询 season_id, 然后按 season_id 流程处理
+            let season_id = api
+                .get_media_season_id(*media_id)
+                .await
+                .with_context(|| format!("通过 media_id {media_id} 查询 season_id 失败"))?;
+            api.get_bangumi_season(season_id).await?
         } else {
             anyhow::bail!("missing bangumi identifier")
         };

@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use parking_lot::Mutex;
 use reqwest::{
     header::{HeaderMap, HeaderValue, COOKIE, REFERER, USER_AGENT},
@@ -206,6 +206,43 @@ impl BilibiliApi {
         .await
     }
 
+    /// 获取弹幕 XML (V1 格式).
+    ///
+    /// 端点返回 `text/xml`, 非 JSON, 因此直接返回原始文本.
+    pub async fn get_danmaku_xml(&self, oid: u64) -> Result<String> {
+        let url = format!("https://api.bilibili.com/x/v1/dm/list.so?oid={oid}");
+        let text = self
+            .client
+            .get(&url)
+            .send()
+            .await?
+            .error_for_status()?
+            .text()
+            .await?;
+        Ok(text)
+    }
+
+    /// 查询番剧 `media_id` 对应的 `season_id`.
+    ///
+    /// 用于解析 `play/md{media_id}` 格式的番剧 URL.
+    pub async fn get_media_season_id(&self, media_id: u64) -> Result<u64> {
+        let value: serde_json::Value = self
+            .get_json(&format!(
+                "https://api.bilibili.com/pgc/review/user/media?media_id={media_id}"
+            ))
+            .await?;
+        let code = value["code"].as_i64().unwrap_or(-1);
+        if code != 0 {
+            anyhow::bail!(
+                "media_id API 返回错误: {}",
+                value["message"].as_str().unwrap_or("未知错误")
+            );
+        }
+        value["result"]["media"]["season_id"]
+            .as_u64()
+            .with_context(|| "media_id 查询结果中缺少 season_id")
+    }
+
     async fn build_wbi_signed_url(
         &self,
         base: &str,
@@ -327,5 +364,26 @@ mod tests {
         let _api = BilibiliApi::new().unwrap();
         // clone 不应 panic
         let _api2 = _api.clone();
+    }
+
+    #[test]
+    fn test_media_season_id_json_structure() {
+        let sample = r#"{"code":0,"message":"success","result":{"media":{"season_id":39443}}}"#;
+        let v: serde_json::Value = serde_json::from_str(sample).unwrap();
+        assert_eq!(v["result"]["media"]["season_id"].as_u64(), Some(39443));
+    }
+
+    /// 集成测试: 验证弹幕 XML 端点的响应包含 `<i>` 或 `<d>` 标签.
+    /// 使用已知视频的 oid (cid) 进行测试, 但标记为 `#[ignore]` 以避免 CI 网络依赖.
+    #[tokio::test]
+    #[ignore]
+    async fn test_get_danmaku_xml_contains_tags() {
+        let api = BilibiliApi::new().unwrap();
+        // BV17x411w7KC 的已知 cid
+        let xml = api.get_danmaku_xml(456).await;
+        // 网络可能不通, 跳过而非失败
+        if let Ok(xml) = xml {
+            assert!(xml.contains("<i>") || xml.contains("<d"));
+        }
     }
 }
