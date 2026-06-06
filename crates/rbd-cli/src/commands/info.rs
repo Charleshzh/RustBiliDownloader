@@ -11,7 +11,7 @@ pub async fn run(url: &str) -> Result<()> {
     println!("类型:        {normalized}");
 
     // 加载默认 auth profile, 空间/收藏夹 API 需要 SESSDATA
-    let api = load_api_with_auth().await?;
+    let api = load_api_with_auth()?;
     let registry = ExtractorRegistry::with_defaults();
 
     match registry.extract(&normalized, &api).await {
@@ -46,7 +46,7 @@ pub async fn run(url: &str) -> Result<()> {
 }
 
 /// 加载默认 auth profile 并创建带 cookie 的 API 客户端.
-async fn load_api_with_auth() -> Result<BilibiliApi> {
+fn load_api_with_auth() -> Result<BilibiliApi> {
     // 尝试从 keychain 加载 profile
     let profile = rbd_auth::keyring_store::load("default")
         .or_else(|_| rbd_auth::keyring_store::load("ci-test"));
