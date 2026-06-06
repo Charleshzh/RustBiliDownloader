@@ -283,8 +283,10 @@ static RE_SHORT: std::sync::LazyLock<Regex> = std::sync::LazyLock::new(|| {
     // https://b23.tv/xxx 或 https://bili2233.cn/xxx
     Regex::new(r"(b23\.tv|bili2233\.cn)/(?P<code>[A-Za-z0-9]+)").unwrap()
 });
-static RE_RAW_BV: std::sync::LazyLock<Regex> = std::sync::LazyLock::new(|| Regex::new(r"^BV[1-9A-HJ-NP-Za-km-z]{10}$").unwrap());
-static RE_RAW_AV: std::sync::LazyLock<Regex> = std::sync::LazyLock::new(|| Regex::new(r"^av\d+$").unwrap());
+static RE_RAW_BV: std::sync::LazyLock<Regex> =
+    std::sync::LazyLock::new(|| Regex::new(r"^BV[1-9A-HJ-NP-Za-km-z]{10}$").unwrap());
+static RE_RAW_AV: std::sync::LazyLock<Regex> =
+    std::sync::LazyLock::new(|| Regex::new(r"^av\d+$").unwrap());
 
 /// 解析 B 站 URL → `NormalizedId`. 解析失败返回 `anyhow::Error`.
 pub fn parse_url(input: &str) -> anyhow::Result<NormalizedId> {

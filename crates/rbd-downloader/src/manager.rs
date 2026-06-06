@@ -198,10 +198,7 @@ impl DownloadManager {
 
         if let Some(spec) = subtitle {
             let subtitle_cb = on_event;
-            let _ = self
-                .parallel
-                .download(spec, subtitle_cb)
-                .await?;
+            let _ = self.parallel.download(spec, subtitle_cb).await?;
         }
 
         self.mark_done();

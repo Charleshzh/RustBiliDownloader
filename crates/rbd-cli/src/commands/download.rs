@@ -425,13 +425,7 @@ async fn fetch_subtitles(
 }
 
 /// 下载弹幕.
-fn fetch_danmaku(
-    _api: &BilibiliApi,
-    _bvid: &str,
-    _cid: u64,
-    _output_dir: &Path,
-    _title: &str,
-) {
+fn fetch_danmaku(_api: &BilibiliApi, _bvid: &str, _cid: u64, _output_dir: &Path, _title: &str) {
     // TODO M5: 从 B 站 API 获取弹幕并渲染为 ASS
     tracing::debug!("弹幕下载功能将在 M5 实现");
 }

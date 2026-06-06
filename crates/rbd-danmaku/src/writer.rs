@@ -47,8 +47,16 @@ pub fn write_danmaku(
     let end = format_ass_time(time + duration);
     let color_tag = crate::color::ass_color_alpha_tag(rgb, 0.8);
     let pos_tag = match mode {
-        4 => format!(r"\an8\pos({},{})", 0, (i32::try_from(line).unwrap_or(0) + 1) * 30),
-        5 => format!(r"\an2\pos({},{})", 0, (i32::try_from(line).unwrap_or(0) + 1) * 30),
+        4 => format!(
+            r"\an8\pos({},{})",
+            0,
+            (i32::try_from(line).unwrap_or(0) + 1) * 30
+        ),
+        5 => format!(
+            r"\an2\pos({},{})",
+            0,
+            (i32::try_from(line).unwrap_or(0) + 1) * 30
+        ),
         _ => {
             // 默认滚动: 从右边缘滚出到左边缘外
             format!(

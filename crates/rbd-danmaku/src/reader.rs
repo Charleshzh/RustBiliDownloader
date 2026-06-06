@@ -161,7 +161,7 @@ pub fn parse_json(json_str: &str) -> Result<DanmakuList> {
 /// **模式映射** (B 站 protobuf 与 XML 弹幕模式一致):
 /// - 1 = 滚动, 4 = 底部, 5 = 顶部, 6 = 逆向, 7 = 精确控制, 8 = 高级
 pub mod protobuf {
-    use super::{Result, DanmakuList, Danmaku};
+    use super::{Danmaku, DanmakuList, Result};
     use prost::Message;
 
     /// B 站 protobuf 弹幕响应.

@@ -34,7 +34,9 @@ impl JobState {
             // Pending 可进入 Running / Paused 可恢复
             (JobState::Pending | JobState::Paused, JobState::Running) => Ok(JobState::Running),
             // 任何可取消状态
-            (JobState::Pending | JobState::Running | JobState::Paused, JobState::Cancelled) => Ok(JobState::Cancelled),
+            (JobState::Pending | JobState::Running | JobState::Paused, JobState::Cancelled) => {
+                Ok(JobState::Cancelled)
+            }
 
             // Running 可暂停/完成/失败
             (JobState::Running, JobState::Paused) => Ok(JobState::Paused),

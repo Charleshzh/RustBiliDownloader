@@ -74,7 +74,11 @@ pub fn srt_to_ass(srt_content: &str) -> Result<String> {
     for event in events {
         let start = format_ass_timestamp(event.start);
         let end = format_ass_timestamp(event.end);
-        let _ = write!(ass, "Dialogue: 0,{start},{end},Default,,0,0,0,,{}\r\n", event.text);
+        let _ = write!(
+            ass,
+            "Dialogue: 0,{start},{end},Default,,0,0,0,,{}\r\n",
+            event.text
+        );
     }
 
     Ok(ass)

@@ -218,9 +218,7 @@ fn parse_cheese_season_response(v: &serde_json::Value) -> VInfo {
         title: data["title"].as_str().unwrap_or("课程").to_string(),
         desc: data["subtitle"].as_str().unwrap_or("").to_string(),
         pic: data["cover"].as_str().unwrap_or("").to_string(),
-        pubdate: data["pub_time"]
-            .as_str()
-            .map_or(0, parse_publish_time),
+        pubdate: data["pub_time"].as_str().map_or(0, parse_publish_time),
         owner_mid: 0,
         owner_name: String::new(),
         aid: 0,

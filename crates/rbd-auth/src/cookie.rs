@@ -49,7 +49,10 @@ pub fn to_cookie_header<S: std::hash::BuildHasher>(cookies: &HashMap<String, Str
 }
 
 /// 合并两个 cookie map, `other` 中的键会覆盖 `base`.
-pub fn merge_cookies<S1: std::hash::BuildHasher, S2: std::hash::BuildHasher>(base: &mut HashMap<String, String, S1>, other: &HashMap<String, String, S2>) {
+pub fn merge_cookies<S1: std::hash::BuildHasher, S2: std::hash::BuildHasher>(
+    base: &mut HashMap<String, String, S1>,
+    other: &HashMap<String, String, S2>,
+) {
     for (k, v) in other {
         base.insert(k.clone(), v.clone());
     }
