@@ -22,9 +22,12 @@ pub mod progress;
 pub mod manager;
 /// 下载事件 (进度/完成/失败).
 pub mod event;
+/// 下载任务状态机 (Pending → Running → Done/Failed/Cancelled/Paused).
+pub mod job;
 
 pub use aria2c::{Aria2Status, Aria2cClient};
 pub use event::DownloadEvent;
+pub use job::JobState;
 pub use manager::{DownloadManager, DownloadMode};
 pub use parallel::{calculate_blocks, DownloadSpec, ParallelDownloader};
 pub use progress::DownloadProgress;

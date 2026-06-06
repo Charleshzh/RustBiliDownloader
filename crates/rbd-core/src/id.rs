@@ -129,6 +129,13 @@ pub enum NormalizedId {
         /// season id
         season_id: u64,
     },
+    /// 合集 (UP 主创建的合集, season_id)
+    Collection {
+        /// mid
+        mid: u64,
+        /// season_id (collection sid)
+        sid: u64,
+    },
     /// 短链 (需 b23.tv → 完整 URL 重定向后再次 parse)
     ShortLink {
         /// 短码 (b23.tv/ 后部分)
@@ -172,6 +179,7 @@ impl fmt::Display for NormalizedId {
             NormalizedId::Mid { mid } => write!(f, "UP 主: mid{mid}"),
             NormalizedId::MediaList { biz_id } => write!(f, "媒体列表: ml{biz_id}"),
             NormalizedId::IntlBangumi { season_id } => write!(f, "国际版番剧: ss{season_id}"),
+            NormalizedId::Collection { mid, sid } => write!(f, "合集: mid{mid} sid{sid}"),
             NormalizedId::ShortLink { code } => write!(f, "短链: {code}"),
         }
     }
@@ -254,6 +262,10 @@ static RE_CHEESE_EP: Lazy<Regex> = Lazy::new(|| {
 static RE_FAV: Lazy<Regex> = Lazy::new(|| {
     // https://space.bilibili.com/123/favlist?fid=456
     Regex::new(r"space\.bilibili\.com/(?P<mid>\d+)/favlist\?.*?fid=(?P<fid>\d+)").unwrap()
+});
+static RE_COLLECTION: Lazy<Regex> = Lazy::new(|| {
+    // https://space.bilibili.com/123/collectiondetail?sid=456
+    Regex::new(r"space\.bilibili\.com/(?P<mid>\d+)/collectiondetail\?.*?sid=(?P<sid>\d+)").unwrap()
 });
 static RE_SPACE_VIDEO: Lazy<Regex> = Lazy::new(|| {
     // https://space.bilibili.com/123/video
@@ -341,6 +353,14 @@ pub fn parse_url(input: &str) -> anyhow::Result<NormalizedId> {
         return Ok(NormalizedId::Cheese {
             season_id: 0,
             ep_id: Some(c.name("ep").unwrap().as_str().parse()?),
+        });
+    }
+
+    // 合集 (在收藏夹前, 因为更具体)
+    if let Some(c) = RE_COLLECTION.captures(s) {
+        return Ok(NormalizedId::Collection {
+            mid: c.name("mid").unwrap().as_str().parse()?,
+            sid: c.name("sid").unwrap().as_str().parse()?,
         });
     }
 
@@ -562,6 +582,28 @@ mod tests {
                 assert_eq!(code, "abc123");
             }
             _ => panic!("expected ShortLink"),
+        }
+    }
+
+    #[test]
+    fn test_collection() {
+        match parse_url("https://space.bilibili.com/12345/collectiondetail?sid=67890").unwrap() {
+            NormalizedId::Collection { mid, sid } => {
+                assert_eq!(mid, 12345);
+                assert_eq!(sid, 67890);
+            }
+            _ => panic!("expected Collection"),
+        }
+    }
+
+    #[test]
+    fn test_collection_with_extra_params() {
+        match parse_url("https://space.bilibili.com/777/collectiondetail?sid=888&tab=1").unwrap() {
+            NormalizedId::Collection { mid, sid } => {
+                assert_eq!(mid, 777);
+                assert_eq!(sid, 888);
+            }
+            _ => panic!("expected Collection"),
         }
     }
 

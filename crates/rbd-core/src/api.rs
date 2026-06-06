@@ -156,6 +156,14 @@ impl BilibiliApi {
         self.get_json(&url).await
     }
 
+    /// 获取合集信息 (UP 主合集, polymer API).
+    pub async fn get_collection(&self, mid: u64, sid: u64, page: u32) -> Result<serde_json::Value> {
+        self.get_json(&format!(
+            "https://api.bilibili.com/x/polymer/space/seasons_archives_list?mid={mid}&season_id={sid}&page_num={page}&page_size=30"
+        ))
+        .await
+    }
+
     /// 获取合集信息.
     pub async fn get_series(&self, series_id: u64) -> Result<serde_json::Value> {
         self.get_json(&format!(
@@ -164,12 +172,26 @@ impl BilibiliApi {
         .await
     }
 
-    /// 获取收藏夹信息.
-    pub async fn get_fav_folder(&self, fid: u64, _page: u32) -> Result<serde_json::Value> {
-        self.get_json(&format!(
-            "https://api.bilibili.com/x/v2/fav/folder/created/list-all?fid={fid}"
-        ))
-        .await
+    /// 获取收藏夹信息 (需要 WBI 签名).
+    pub async fn get_fav_folder(&self, fid: u64, page: u32) -> Result<serde_json::Value> {
+        let url = self
+            .build_wbi_signed_url(
+                "https://api.bilibili.com/x/v2/fav/folder/created/list-all",
+                vec![("fid", fid.to_string()), ("pn", page.to_string())],
+            )
+            .await?;
+        self.get_json(&url).await
+    }
+
+    /// 获取播单信息 (需要 WBI 签名).
+    pub async fn get_media_list(&self, biz_id: u64) -> Result<serde_json::Value> {
+        let url = self
+            .build_wbi_signed_url(
+                "https://api.bilibili.com/x/v2/medialist/resource/list",
+                vec![("type", "1".to_string()), ("biz_id", biz_id.to_string())],
+            )
+            .await?;
+        self.get_json(&url).await
     }
 
     /// 获取课程信息.

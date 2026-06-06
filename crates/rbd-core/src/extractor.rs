@@ -30,7 +30,7 @@ impl ExtractorRegistry {
         Self { fetchers: vec![] }
     }
 
-    /// 创建带默认 8 个抽取器的注册表.
+    /// 创建带默认 9 个抽取器的注册表.
     pub fn with_defaults() -> Self {
         let mut registry = Self::new();
         registry.register(Box::new(NormalExtractor));
@@ -39,6 +39,7 @@ impl ExtractorRegistry {
         registry.register(Box::new(FavListExtractor));
         registry.register(Box::new(MediaListExtractor));
         registry.register(Box::new(SeriesExtractor));
+        registry.register(Box::new(CollectionExtractor));
         registry.register(Box::new(SpaceExtractor));
         registry.register(Box::new(IntlBangumiExtractor));
         registry
@@ -81,6 +82,8 @@ pub struct FavListExtractor;
 pub struct MediaListExtractor;
 /// 合集抽取器.
 pub struct SeriesExtractor;
+/// 合集 (UP 主合集) 抽取器.
+pub struct CollectionExtractor;
 /// 空间抽取器.
 pub struct SpaceExtractor;
 /// 国际版番剧抽取器.
@@ -322,12 +325,7 @@ impl Extractor for MediaListExtractor {
             anyhow::bail!("media list extractor only supports media list ids")
         };
 
-        // 使用收藏夹端点相似的格式, 但参数不同
-        let value: serde_json::Value = api
-            .get_json(&format!(
-                "https://api.bilibili.com/x/v2/medialist/resource/list?type=1&biz_id={biz_id}"
-            ))
-            .await?;
+        let value: serde_json::Value = api.get_media_list(*biz_id).await?;
 
         let ml_title = value["data"]["info"]["title"]
             .as_str()
@@ -460,6 +458,28 @@ impl Extractor for SeriesExtractor {
             is_stein_gate: false,
             tags: vec![],
         })
+    }
+}
+
+// ── CollectionExtractor ───────────────────────────────────────────
+
+#[async_trait]
+impl Extractor for CollectionExtractor {
+    fn name(&self) -> &'static str {
+        "collection"
+    }
+
+    fn matches(&self, id: &NormalizedId) -> bool {
+        matches!(id, NormalizedId::Collection { .. })
+    }
+
+    async fn extract(&self, id: &NormalizedId, api: &BilibiliApi) -> Result<VInfo> {
+        let NormalizedId::Collection { mid, sid } = id else {
+            anyhow::bail!("collection extractor only supports collection ids")
+        };
+
+        let value = api.get_collection(*mid, *sid, 1).await?;
+        parse_collection_response(&value, *mid)
     }
 }
 
@@ -817,6 +837,62 @@ fn parse_publish_time(s: &str) -> i64 {
         .unwrap_or(0)
 }
 
+/// 解析合集 polymer API 响应.
+pub fn parse_collection_response(v: &serde_json::Value, mid: u64) -> Result<VInfo> {
+    let data = &v["data"];
+
+    let collection_title = data["meta"]["name"]
+        .as_str()
+        .unwrap_or("合集")
+        .to_string();
+
+    let archives = data["archives"].as_array();
+    let pages: Vec<Page> = archives
+        .map(|items| {
+            items
+                .iter()
+                .map(|item| {
+                    let title = item["title"].as_str().unwrap_or("未命名");
+                    let cid = item["cid"].as_u64().unwrap_or(0);
+                    let duration = item["duration"].as_u64().unwrap_or(0) as u32;
+                    Page {
+                        page_index: 0,
+                        cid,
+                        title: title.to_string(),
+                        duration,
+                        dimension: String::new(),
+                    }
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+
+    let first_bvid = archives
+        .and_then(|items| items.first())
+        .and_then(|item| item["bvid"].as_str())
+        .unwrap_or("")
+        .to_string();
+
+    Ok(VInfo {
+        title: collection_title,
+        desc: String::new(),
+        pic: data["meta"]["cover"].as_str().unwrap_or("").to_string(),
+        pubdate: 0,
+        owner_mid: mid,
+        owner_name: String::new(),
+        aid: 0,
+        bvid: first_bvid,
+        cids: pages.iter().map(|page| page.cid).collect(),
+        part_names: pages.iter().map(|page| page.title.clone()).collect(),
+        pages,
+        view_points: vec![],
+        is_bangumi: false,
+        is_cheese: false,
+        is_stein_gate: false,
+        tags: vec![],
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -901,6 +977,13 @@ mod tests {
     }
 
     #[test]
+    fn test_registry_with_defaults_finds_collection() {
+        let registry = ExtractorRegistry::with_defaults();
+        let id = NormalizedId::Collection { mid: 123, sid: 456 };
+        assert_eq!(registry.find(&id).map(Extractor::name), Some("collection"));
+    }
+
+    #[test]
     fn test_parse_bangumi_season_response() {
         let value = serde_json::json!({
             "code": 0,
@@ -927,5 +1010,58 @@ mod tests {
         assert!(info.is_bangumi);
         assert_eq!(info.title, "番剧标题");
         assert_eq!(info.pages[0].title, "第1话 启程");
+    }
+
+    #[test]
+    fn test_collection_extractor_matches() {
+        let extractor = CollectionExtractor;
+        assert!(extractor.matches(&NormalizedId::Collection { mid: 1, sid: 2 }));
+        assert!(!extractor.matches(&NormalizedId::UgcVideo { id: "BVxx".into(), page_index: 0 }));
+        assert!(!extractor.matches(&NormalizedId::Favourite { fid: 1 }));
+    }
+
+    #[test]
+    fn test_parse_collection_response() {
+        let value = serde_json::json!({
+            "code": 0,
+            "data": {
+                "meta": {
+                    "name": "我的合集",
+                    "cover": "https://i0.hdslb.com/collection.jpg",
+                    "mid": 12345
+                },
+                "archives": [
+                    {
+                        "bvid": "BV1xx411c7mD",
+                        "aid": 170001,
+                        "title": "合集视频1",
+                        "cover": "https://i0.hdslb.com/v1.jpg",
+                        "duration": 120,
+                        "ctime": 1710000000,
+                        "cid": 111
+                    },
+                    {
+                        "bvid": "BV2xx411c7mE",
+                        "aid": 170002,
+                        "title": "合集视频2",
+                        "cover": "https://i0.hdslb.com/v2.jpg",
+                        "duration": 180,
+                        "ctime": 1710000001,
+                        "cid": 222
+                    }
+                ],
+                "page": { "total": 2, "num": 1, "size": 30 }
+            }
+        });
+
+        let info = parse_collection_response(&value, 12345).unwrap();
+        assert_eq!(info.title, "我的合集");
+        assert_eq!(info.bvid, "BV1xx411c7mD");
+        assert_eq!(info.owner_mid, 12345);
+        assert_eq!(info.cids, vec![111, 222]);
+        assert_eq!(info.pages.len(), 2);
+        assert_eq!(info.pages[0].title, "合集视频1");
+        assert_eq!(info.pages[1].title, "合集视频2");
+        assert_eq!(info.part_names, vec!["合集视频1", "合集视频2"]);
     }
 }
